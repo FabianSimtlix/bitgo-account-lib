@@ -107,7 +107,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
     }
 
     if (
-      (this._type === TransactionType.Send || this._type === TransactionType.AddressDelegation) &&
+      (this._type === TransactionType.Send || this._type === TransactionType.Stake) &&
       (!this._sourceAddress || this._sourceAddress != signer.getAddress())
     ) {
       // If the signer is not the source and it is a send transaction, add it to the list of
@@ -168,7 +168,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
           }
           contents = contents.concat(await this.buildSendTransactionContent());
           break;
-        case TransactionType.AddressDelegation:
+        case TransactionType.Stake:
           if (this._publicKeyToReveal) {
             contents.push(this.buildAddressInitializationOperations());
           }
@@ -397,7 +397,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
    * @returns {TransferBuilder} A transfer builder
    */
   delegate(): TransferBuilder {
-    if (this._type !== TransactionType.AddressDelegation) {
+    if (this._type !== TransactionType.Stake) {
       throw new BuildTransactionError('Delegation can be made only for transactions with address delegation type');
     }
     let transferBuilder = new TransferBuilder();
@@ -560,7 +560,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
         break;
       case TransactionType.Send:
         break;
-      case TransactionType.AddressDelegation:
+      case TransactionType.Stake:
         break;
       default:
         throw new BuildTransactionError('Transaction type not supported');

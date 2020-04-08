@@ -203,7 +203,7 @@ describe('Tezos Transaction builder', function() {
 
     it('a multisig delegation transaction', async () => {
       const txBuilder: any = getBuilder('xtz');
-      txBuilder.type(TransactionType.AddressDelegation);
+      txBuilder.type(TransactionType.Stake);
       txBuilder.branch('BM4kxnGwLAb1mt6JjpoganCeskK1kDn1dMt56PNK2fGePiSMVTJ');
       txBuilder.source(defaultKeyPair.getAddress());
       txBuilder.counter('10');
@@ -391,7 +391,6 @@ describe('Tezos Transaction builder', function() {
       );
       const indexesByTransactionType = tx.getIndexesByTransactionType();
       Object.keys(indexesByTransactionType).length.should.equal(1);
-      console.log(indexesByTransactionType);
       indexesByTransactionType.transaction.length.should.equal(2);
       indexesByTransactionType.transaction[0].should.equal(0);
       indexesByTransactionType.transaction[1].should.equal(1);
