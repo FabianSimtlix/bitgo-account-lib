@@ -51,7 +51,7 @@ export async function sign(transactionData: TxData, keyPair: KeyPair): Promise<s
  * @param {TxData} transactionData the transaction data with base values
  * @returns {TxData} the transaction data with hex values
  */
-function formatTransaction(transactionData: TxData): TxData {
+export function formatTransaction(transactionData: TxData): TxData {
   return {
     gasLimit: addHexPrefix(Number(transactionData.gasLimit).toString(16)),
     gasPrice: addHexPrefix(new BigNumber(transactionData.gasPrice as string).toString(16)),

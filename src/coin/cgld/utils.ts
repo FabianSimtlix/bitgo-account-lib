@@ -27,7 +27,7 @@ export async function sign(transactionData: TxData, keyPair: KeyPair): Promise<s
  * @param {TxData} transactionData the transaction data with base values
  * @returns {TxData} the transaction data with hex values
  */
-function formatTx(transactionData: TxData): TxData {
+export function formatTx(transactionData: TxData): TxData {
   return {
     nonce: addHexPrefix(Number(transactionData.nonce).toString(16)),
     data: transactionData.data,

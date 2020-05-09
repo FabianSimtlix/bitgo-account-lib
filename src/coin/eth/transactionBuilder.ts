@@ -21,23 +21,23 @@ const DEFAULT_M = 3;
  * Ethereum transaction builder.
  */
 export class TransactionBuilder extends BaseTransactionBuilder {
-  private _serializedTransaction: string;
-  private _transaction: Transaction;
-  private _sourceKeyPair: KeyPair;
-  private _type: TransactionType;
-  private _chainId: number;
-  private _counter: number;
-  private _fee: Fee;
-  private _sourceAddress: string;
+  protected _serializedTransaction: string;
+  protected _transaction: Transaction;
+  protected _sourceKeyPair: KeyPair;
+  protected _type: TransactionType;
+  protected _chainId: number;
+  protected _counter: number;
+  protected _fee: Fee;
+  protected _sourceAddress: string;
 
   // Wallet initialization transaction parameters
-  private _initialBalance: string;
-  private _walletOwnerAddresses: string[];
+  protected _initialBalance: string;
+  protected _walletOwnerAddresses: string[];
 
   /**
    * Public constructor.
    *
-   * @param _coinConfig
+   * @param {CoinConfig} _coinConfig
    */
   constructor(_coinConfig: Readonly<CoinConfig>) {
     super(_coinConfig);
@@ -49,17 +49,20 @@ export class TransactionBuilder extends BaseTransactionBuilder {
 
   /** @inheritdoc */
   protected async buildImplementation(): Promise<BaseTransaction> {
-    let transactionData;
-    switch (this._type) {
-      case TransactionType.WalletInitialization:
-        transactionData = this.buildWalletInitializationTransaction();
-        break;
-      default:
-        throw new BuildTransactionError('Unsupported transaction type');
+    // If the from() method was called, use the serialized transaction as a base
+    if (this._serializedTransaction) {
+      this.transaction.initFromSerializedTransaction(this._serializedTransaction);
+    } else {
+      let transactionData;
+      switch (this._type) {
+        case TransactionType.WalletInitialization:
+          transactionData = this.buildWalletInitializationTransaction();
+          break;
+        //TODO Other transaction types
+      }
+      this.transaction.setTransactionType(this._type);
+      this.transaction.setTransactionData(transactionData);
     }
-    this.transaction.setTransactionType(this._type);
-    this.transaction.setTransactionData(transactionData);
-
     // Build and sign a new transaction based on the latest changes
     if (this._sourceKeyPair && this._sourceKeyPair.getKeys().prv) {
       await this.transaction.sign(this._sourceKeyPair);
@@ -69,13 +72,9 @@ export class TransactionBuilder extends BaseTransactionBuilder {
 
   /** @inheritdoc */
   protected fromImplementation(rawTransaction: string): Transaction {
-    let tx: Transaction;
-    if (/^0x?[0-9a-f]{1,}$/.test(rawTransaction.toLowerCase())) {
-      tx = new Transaction(this._coinConfig, rawTransaction);
-    } else {
-      const txData = JSON.parse(rawTransaction);
-      tx = new Transaction(this._coinConfig, txData);
-    }
+    //rawTransaction is already validated in validateRawTransaction method
+    this._serializedTransaction = rawTransaction;
+    const tx = new Transaction(this._coinConfig, rawTransaction);
     return tx;
   }
 
@@ -85,7 +84,11 @@ export class TransactionBuilder extends BaseTransactionBuilder {
     if (this._type != TransactionType.WalletInitialization) {
       throw new SigningError('Cannot sign an unsupported operation'); //TODO: Remove this when other transactions are supported
     }
-    if (this._type === TransactionType.WalletInitialization && this._walletOwnerAddresses.length === 0) {
+    if (
+      this._type === TransactionType.WalletInitialization &&
+      this._walletOwnerAddresses.length === 0 &&
+      !this._serializedTransaction
+    ) {
       throw new SigningError('Cannot sign an wallet initialization transaction without owners');
     }
     if (this._sourceKeyPair) {
@@ -128,15 +131,9 @@ export class TransactionBuilder extends BaseTransactionBuilder {
         } catch (e) {
           throw new ParseTransactionError('There was error in decoding the hex string');
         }
-      } else {
-        try {
-          JSON.parse(rawTransaction);
-        } catch (e) {
-          throw new ParseTransactionError('There was error in parsing the JSON string');
-        }
       }
     } else {
-      throw new InvalidTransactionError('Transaction is not a hex string or stringified json');
+      throw new InvalidTransactionError('Transaction is not a hex string');
     }
   }
 
@@ -144,18 +141,21 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   validateTransaction(transaction: BaseTransaction): void {
     switch (this._type) {
       case TransactionType.WalletInitialization: {
-        if (
-          this._fee &&
-          this._chainId &&
-          this._walletOwnerAddresses &&
-          this._walletOwnerAddresses.length == 3 &&
-          this._counter &&
-          this._sourceAddress
-        ) {
-          break;
-        } else {
-          throw new BuildTransactionError('Invalid transaction');
+        if (!this._serializedTransaction) {
+          if (
+            this._fee &&
+            this._chainId &&
+            this._walletOwnerAddresses &&
+            this._walletOwnerAddresses.length == 3 &&
+            this._counter &&
+            this._sourceAddress
+          ) {
+            break;
+          } else {
+            throw new BuildTransactionError('Invalid transaction');
+          }
         }
+        break;
       }
       case TransactionType.Send:
         //  TODO: validate when transaction type send be developed
@@ -254,7 +254,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
    *
    * @returns {TxData} The Ethereum transaction data
    */
-  private buildWalletInitializationTransaction(): TxData {
+  protected buildWalletInitializationTransaction(): TxData {
     return {
       gasLimit: this._fee.gasLimit,
       gasPrice: this._fee.fee,

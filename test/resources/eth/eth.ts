@@ -31,6 +31,12 @@ export const ACCOUNT_2 = '0x2fa96fca36dd9d646AC8a4e0C19b4D3a0Dc7e456';
 
 export const ACCOUNT_3 = '0xc37825D368eC3F50a1505542d8fFB25f7b6288f2';
 
+export const ACCOUNT_4 = '0x6461EC4E9dB87CFE2aeEc7d9b02Aa264edFbf41f';
+
+export const ACCOUNT_5 = '0xf10C8f42BD63D0AeD3338A6B2b661BC6D9fa7C44';
+
+export const ACCOUNT_6 = '0xa4b5666FB4fFEA84Dd848845E1114b84146de4b3';
+
 export const INVALID_ACCOUNT = 'invalidhash';
 
 export const TXDATA = {
@@ -40,9 +46,18 @@ export const TXDATA = {
   chainId: 42,
   gasLimit: 12000,
   gasPrice: 10,
-  data: '0x1',
+  data: '0x01',
 };
 
+export const TXDATA_EMPTY_DATA = {
+  nonce: 1,
+  to: '0xBa8eA9C3729686d7DB120efCfC81cD020C8DC1CB',
+  value: 125,
+  chainId: 42,
+  gasLimit: 12000,
+  gasPrice: 10,
+  data: '',
+};
 export const SIGNED_TX =
   '0xf84b010a822ee080800177a03e2d118a9b2876c3f773df3b31931b8f95c81c95fe24095f92bafae8758c91eda021d738bf838399f7730712cf230ac1b1d092dd2a088be52c3aa23d6a973ec323';
 

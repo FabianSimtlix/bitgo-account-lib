@@ -1,7 +1,10 @@
 import should from 'should';
+import { RLP } from 'ethers/utils';
 import { TransactionType } from '../../../../src/coin/baseCoin/';
 import { getBuilder, Eth } from '../../../../src';
 import * as testData from '../../../resources/eth/eth';
+import { formatTransaction } from '../../../../src/coin/eth/utils';
+import { getContractData } from '../../../../src/coin/eth/utils';
 
 describe('Eth Transaction builder', function() {
   const defaultKeyPair = new Eth.KeyPair({
@@ -44,6 +47,19 @@ describe('Eth Transaction builder', function() {
       txJson.gasPrice.should.equal('10');
       should.equal(txJson.nonce, 1);
       should.equal(txJson.chainId, 42);
+    });
+
+    it('a serialized transaction', async () => {
+      const txBuilder: any = getBuilder('eth');
+      txBuilder.from(testData.ENCODED_TRANSACTION);
+      txBuilder.type(TransactionType.WalletInitialization);
+      const tx = await txBuilder.build();
+      const txJson = txBuilder.transaction.toJson();
+      should.equal(txJson.nonce, testData.TXDATA.nonce);
+      should.equal(txJson.gasPrice, testData.TXDATA.gasPrice);
+      should.equal(txJson.gasLimit, testData.TXDATA.gasLimit);
+      should.equal(txJson.data, testData.TXDATA.data);
+      should.equal(tx.toBroadcastFormat(), testData.ENCODED_TRANSACTION);
     });
   });
 
@@ -152,11 +168,9 @@ describe('Eth Transaction builder', function() {
     it('a raw transaction', async () => {
       const builder: any = getBuilder('eth');
       should.doesNotThrow(() => builder.from(testData.TX_BROADCAST));
-      should.doesNotThrow(() => builder.from(testData.TX_JSON));
       should.throws(() => builder.from('0x00001000'), 'There was error in decoding the hex string');
       should.throws(() => builder.from(''), 'There was error in decoding the hex string');
-      should.throws(() => builder.from('pqrs'), 'There was error in parsing the JSON string');
-      should.throws(() => builder.from(1234), 'Transaction is not a hex string or stringified json');
+      should.throws(() => builder.from(1234), 'Transaction is not a hex string');
     });
 
     it('a transaction to build', async () => {
