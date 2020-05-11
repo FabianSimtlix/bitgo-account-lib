@@ -31,8 +31,8 @@ describe('Celo Transaction builder', function() {
 
       tx.type.should.equal(TransactionType.WalletInitialization);
       const txJson = tx.toJson();
-      txJson.gasLimit.should.equal('12100000');
-      txJson.gasPrice.should.equal('1000000000');
+      txJson.gasLimit.should.equal('0xb8a1a0');
+      txJson.gasPrice.should.equal('0x3b9aca00');
       should.equal(txJson.nonce, 2);
       should.equal(txJson.chainId, 44786);
       should.equal(tx.toBroadcastFormat(), testData.TX_BROADCAST);

@@ -1,6 +1,7 @@
 import { BaseCoin as CoinConfig } from '@bitgo/statics/dist/src/base';
 import BigNumber from 'bignumber.js';
 import { RLP } from 'ethers/utils';
+import { addHexPrefix } from 'ethereumjs-util';
 import * as Crypto from '../../utils/crypto';
 import { BaseTransaction, BaseTransactionBuilder, TransactionType } from '../baseCoin';
 import { BaseAddress, BaseKey } from '../baseCoin/iface';
@@ -256,11 +257,11 @@ export class TransactionBuilder extends BaseTransactionBuilder {
    */
   private buildWalletInitializationTransaction(): TxData {
     return {
-      gasLimit: this._fee.gasLimit,
-      gasPrice: this._fee.fee,
-      nonce: this._counter,
-      chainId: this._chainId,
+      gasLimit: addHexPrefix(new BigNumber(this._fee.gasLimit).toString(16)),
+      gasPrice: addHexPrefix(new BigNumber(this._fee.fee).toString(16)),
+      nonce: addHexPrefix(Number(this._counter).toString(16)),
       data: getContractData(this._walletOwnerAddresses),
+      chainId: addHexPrefix(Number(this._chainId).toString(16)),
     };
   }
   //endregion

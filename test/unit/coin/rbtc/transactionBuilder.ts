@@ -31,8 +31,8 @@ describe('Rbtc Transaction builder', function() {
 
       tx.type.should.equal(TransactionType.WalletInitialization);
       const txJson = tx.toJson();
-      txJson.gasLimit.should.equal('6800000');
-      txJson.gasPrice.should.equal('10000000000');
+      txJson.gasLimit.should.equal('0x67c280');
+      txJson.gasPrice.should.equal('0x2540be400');
       should.equal(txJson.nonce, 1);
       should.equal(txJson.chainId, 31);
       should.equal(tx.toBroadcastFormat(), testData.TX_BROADCAST);

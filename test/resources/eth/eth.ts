@@ -34,12 +34,9 @@ export const ACCOUNT_3 = '0xc37825D368eC3F50a1505542d8fFB25f7b6288f2';
 export const INVALID_ACCOUNT = 'invalidhash';
 
 export const TXDATA = {
-  nonce: 1,
-  to: '0xBa8eA9C3729686d7DB120efCfC81cD020C8DC1CB',
-  value: 125,
-  chainId: 42,
-  gasLimit: 12000,
-  gasPrice: 10,
+  nonce: '0x1',
+  gasLimit: '0x2ee0',
+  gasPrice: '0xa',
   data: '0x1',
 };
 

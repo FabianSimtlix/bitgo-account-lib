@@ -40,8 +40,8 @@ describe('Eth Transaction builder', function() {
 
       tx.type.should.equal(TransactionType.WalletInitialization);
       const txJson = tx.toJson();
-      txJson.gasLimit.should.equal('1000');
-      txJson.gasPrice.should.equal('10');
+      txJson.gasLimit.should.equal('0x3e8');
+      txJson.gasPrice.should.equal('0xa');
       should.equal(txJson.nonce, 1);
       should.equal(txJson.chainId, 42);
     });
@@ -78,8 +78,8 @@ describe('Eth Transaction builder', function() {
 
       tx.type.should.equal(TransactionType.WalletInitialization);
       const txJson = tx.toJson();
-      txJson.gasLimit.should.equal('1000');
-      txJson.gasPrice.should.equal('10');
+      txJson.gasLimit.should.equal('0x3e8');
+      txJson.gasPrice.should.equal('0xa');
       should.equal(txJson.nonce, 1);
       should.equal(txJson.chainId, 42);
       should.equal(tx.toBroadcastFormat(), testData.TX_BROADCAST);
