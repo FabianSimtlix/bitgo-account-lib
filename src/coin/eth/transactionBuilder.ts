@@ -285,7 +285,8 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   }
 
   private getSendData(): string {
-    if (this._transfer) this._transfer.build();
+    if (this._transfer) return this._transfer.build();
+    throw new BuildTransactionError('Missing transfer information');
   }
 
   private buildSendTransaction(): TxData {
