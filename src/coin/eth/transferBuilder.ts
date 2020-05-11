@@ -1,0 +1,104 @@
+import EthereumAbi from 'ethereumjs-abi';
+import { BuildTransactionError } from '../baseCoin/errors';
+import { sendMultiSigData } from './utils';
+
+//TODO: check if we need to include validations on the fields
+/** ETH transfer builder */
+export class TransferBuilder {
+  private _amount: number;
+  private _toAddress: string;
+  private _sequenceId: number;
+  private _data: string;
+  private _signKey: string;
+  private _expirationTime: number;
+
+  amount(amount: number): TransferBuilder {
+    this._amount = amount;
+    return this;
+  }
+
+  to(address: string): TransferBuilder {
+    this._toAddress = address;
+    return this;
+  }
+
+  sequenceId(counter: number): TransferBuilder {
+    this._sequenceId = counter;
+    return this;
+  }
+
+  data(aditionalData: string): TransferBuilder {
+    this._data = aditionalData;
+    return this;
+  }
+
+  key(signKey: string): TransferBuilder {
+    this._signKey = signKey;
+    return this;
+  }
+
+  expirationTime(date: number): TransferBuilder {
+    this._expirationTime = date;
+    return this;
+  }
+
+  build(): string {
+    if (this.hasMandatoryFields()) {
+      this._expirationTime = this._expirationTime | this.getExpirationTime();
+      const signature = this.ethSignMsgHash();
+      return sendMultiSigData(
+        this._toAddress,
+        this._amount,
+        this._data,
+        this._expirationTime,
+        this._sequenceId,
+        signature,
+      );
+    }
+    throw new BuildTransactionError(
+      'Missing transfer mandatory fields. Amount, destination (to) address, signing key and sequenceID are mandatory',
+    );
+  }
+
+  private hasMandatoryFields(): boolean {
+    return this._amount && this._toAddress && this._sequenceId && this._signKey ? true : false;
+  }
+
+  /** Return an expiration time, in seconds, set to one hour from now
+   *
+   * @returns {number} expiration time
+   */
+  private getExpirationTime(): number {
+    const currentTime = new Date().getTime() / 1000;
+    return currentTime + 3600;
+  }
+  
+  private getSHA(): (string | Buffer)[][] {
+    return [
+      ['string','address', 'uint', 'bytes', 'uint', 'uint'],
+      [
+        'ETHER',
+        new EthereumAbi.ethUtil.BN(EthereumAbi.ethUtil.stripHexPrefix(this._toAddress), 16),
+        this._amount,
+        new Buffer(EthereumAbi.ethUtil.stripHexPrefix(this._data) || '', 'hex'),
+        this._expirationTime,
+        this._sequenceId,
+      ],
+    ];
+  }
+
+  private ethSignMsgHash(): string {
+    const signatureInParts = EthereumAbi.ethUtil.ecsign(
+      new Buffer(EthereumAbi.ethUtil.stripHexPrefix(this.getSHA), 'hex'),
+      new Buffer(this._signKey, 'hex'),
+    );
+
+    // Assemble strings from r, s and v
+    const r = EthereumAbi.ethUtil.setLengthLeft(signatureInParts.r, 32).toString('hex');
+    const s = EthereumAbi.ethUtil.setLengthLeft(signatureInParts.s, 32).toString('hex');
+    const v = EthereumAbi.ethUtil.stripHexPrefix(EthereumAbi.ethUtil.intToHex(signatureInParts.v));
+
+    // Concatenate the r, s and v parts to make the signature string
+    return EthereumAbi.ethUtil.addHexPrefix(r.concat(s, v));
+  }
+}

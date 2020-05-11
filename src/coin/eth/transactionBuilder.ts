@@ -4,7 +4,7 @@ import { RLP } from 'ethers/utils';
 import * as Crypto from '../../utils/crypto';
 import { BaseTransaction, BaseTransactionBuilder, TransactionType } from '../baseCoin';
 import { BaseAddress, BaseKey } from '../baseCoin/iface';
-import { Transaction } from '../eth';
+import { Transaction, TransferBuilder } from '../eth';
 import {
   BuildTransactionError,
   SigningError,
@@ -34,6 +34,10 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   private _initialBalance: string;
   private _walletOwnerAddresses: string[];
 
+  // Send transaction specific parameters
+  private _transfer: TransferBuilder;
+  private _contractAddress;
+
   /**
    * Public constructor.
    *
@@ -53,6 +57,9 @@ export class TransactionBuilder extends BaseTransactionBuilder {
     switch (this._type) {
       case TransactionType.WalletInitialization:
         transactionData = this.buildWalletInitializationTransaction();
+        break;
+      case TransactionType.Send:
+        transactionData = this.buildSendTransaction();
         break;
       default:
         throw new BuildTransactionError('Unsupported transaction type');
@@ -82,9 +89,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   /**@inheritdoc */
   protected signImplementation(key: BaseKey): BaseTransaction {
     const signer = new KeyPair({ prv: key.key });
-    if (this._type != TransactionType.WalletInitialization) {
-      throw new SigningError('Cannot sign an unsupported operation'); //TODO: Remove this when other transactions are supported
-    }
     if (this._type === TransactionType.WalletInitialization && this._walletOwnerAddresses.length === 0) {
       throw new SigningError('Cannot sign an wallet initialization transaction without owners');
     }
@@ -158,8 +162,8 @@ export class TransactionBuilder extends BaseTransactionBuilder {
         }
       }
       case TransactionType.Send:
-        //  TODO: validate when transaction type send be developed
-        throw new BuildTransactionError('Unsupported transaction type');
+        //  TODO: add validations
+        break;
       default:
         throw new BuildTransactionError('Unsupported transaction type');
     }
@@ -261,6 +265,37 @@ export class TransactionBuilder extends BaseTransactionBuilder {
       nonce: this._counter,
       chainId: this._chainId,
       data: getContractData(this._walletOwnerAddresses),
+    };
+  }
+  //endregion
+
+  // region Send builder methods
+
+  contract(address: string): void {
+    if (isValidEthAddress(address)) this._contractAddress = address;
+    else throw new BuildTransactionError('Invalid address: ' + address);
+  }
+
+  transfer(amount: number): TransferBuilder {
+    if (this._type !== TransactionType.Send) {
+      this._transfer = new TransferBuilder().amount(amount);
+      return this._transfer;
+    }
+    throw new BuildTransactionError('Transfers can only be set for send transactions');
+  }
+
+  private getSendData(): string {
+    if (this._transfer) this._transfer.build();
+  }
+
+  private buildSendTransaction(): TxData {
+    const sendData = this.getSendData();
+    return {
+      gasLimit: this._fee.gasLimit,
+      gasPrice: this._fee.fee,
+      nonce: this._counter,
+      chainId: this._chainId,
+      data: sendData,
     };
   }
   //endregion
