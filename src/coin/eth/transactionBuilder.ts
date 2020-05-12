@@ -1,6 +1,7 @@
 import { BaseCoin as CoinConfig } from '@bitgo/statics/dist/src/base';
 import BigNumber from 'bignumber.js';
 import { RLP } from 'ethers/utils';
+import { bigNumberify } from 'ethers/utils/bignumber';
 import * as Crypto from '../../utils/crypto';
 import { BaseTransaction, BaseTransactionBuilder, TransactionType } from '../baseCoin';
 import { BaseAddress, BaseKey } from '../baseCoin/iface';
@@ -23,8 +24,8 @@ const DEFAULT_M = 3;
 export class TransactionBuilder extends BaseTransactionBuilder {
   protected _serializedTransaction: string;
   private _transaction: Transaction;
-  private _sourceKeyPair: KeyPair;
-  private _type: TransactionType;
+  protected _sourceKeyPair: KeyPair;
+  protected _type: TransactionType;
   private _chainId: number;
   private _counter: number;
   private _fee: Fee;
@@ -49,9 +50,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   /** @inheritdoc */
   protected async buildImplementation(): Promise<BaseTransaction> {
     // If the from() method was called, use the serialized transaction as a base
-    if (this._serializedTransaction) {
-      this.transaction.initFromSerializedTransaction(this._serializedTransaction);
-    } else {
+    if (this._serializedTransaction === undefined) {
       let transactionData;
       switch (this._type) {
         case TransactionType.WalletInitialization:
@@ -73,7 +72,21 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   protected fromImplementation(rawTransaction: string): Transaction {
     //rawTransaction is already validated in validateRawTransaction method
     this._serializedTransaction = rawTransaction;
-    const tx = new Transaction(this._coinConfig, rawTransaction);
+    const decodedTx = RLP.decode(rawTransaction);
+    const [rawNonce, rawGasPrice, rawGasLimit, rawTo, rawValue, rawData, rawV, rawR, rawS] = decodedTx;
+    const parsedTransaction: TxData = {
+      nonce: bigNumberify(rawNonce).toNumber(),
+      gasPrice: bigNumberify(rawGasPrice).toNumber(),
+      gasLimit: bigNumberify(rawGasLimit).toNumber(),
+      to: rawTo,
+      value: bigNumberify(rawValue).toString(),
+      data: rawData,
+      v: rawV,
+      r: rawR,
+      s: rawS,
+    };
+    const tx = this.transaction;
+    tx.setTransactionData(parsedTransaction);
     return tx;
   }
 
@@ -140,34 +153,35 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   validateTransaction(transaction: BaseTransaction): void {
     switch (this._type) {
       case TransactionType.WalletInitialization:
-        // assume sanitization happened in the builder function, just check that all required fields are set
-        if (this._fee === undefined) {
-          throw new BuildTransactionError('Invalid transaction: missing fee');
-        }
+        if (this._serializedTransaction === undefined) {
+          // assume sanitization happened in the builder function, just check that all required fields are set
+          if (this._fee === undefined) {
+            throw new BuildTransactionError('Invalid transaction: missing fee');
+          }
 
-        if (this._chainId === undefined) {
-          throw new BuildTransactionError('Invalid transaction: missing chain id');
-        }
+          if (this._chainId === undefined) {
+            throw new BuildTransactionError('Invalid transaction: missing chain id');
+          }
 
-        if (this._walletOwnerAddresses === undefined) {
-          throw new BuildTransactionError('Invalid transaction: missing wallet owners');
-        }
+          if (this._walletOwnerAddresses === undefined) {
+            throw new BuildTransactionError('Invalid transaction: missing wallet owners');
+          }
 
-        if (this._walletOwnerAddresses.length !== 3) {
-          throw new BuildTransactionError(
-            `Invalid transaction: wrong number of owners -- required: 3, ` +
-              `found: ${this._walletOwnerAddresses.length}`,
-          );
-        }
+          if (this._walletOwnerAddresses.length !== 3) {
+            throw new BuildTransactionError(
+              `Invalid transaction: wrong number of owners -- required: 3, ` +
+                `found: ${this._walletOwnerAddresses.length}`,
+            );
+          }
 
-        if (this._counter === undefined) {
-          throw new BuildTransactionError('Invalid transaction: missing address counter');
-        }
+          if (this._counter === undefined) {
+            throw new BuildTransactionError('Invalid transaction: missing address counter');
+          }
 
-        if (!this._sourceAddress) {
-          throw new BuildTransactionError('Invalid transaction: missing source');
+          if (!this._sourceAddress) {
+            throw new BuildTransactionError('Invalid transaction: missing source');
+          }
         }
-
         break;
       case TransactionType.Send:
         //  TODO: validate when transaction type send be developed

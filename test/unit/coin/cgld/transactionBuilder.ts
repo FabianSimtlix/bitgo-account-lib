@@ -60,7 +60,6 @@ describe('Celo Transaction builder', function() {
         '0x',
         '0x',
         txFormat.data,
-        txFormat.chainId,
         '0x',
         '0x',
         '0x',

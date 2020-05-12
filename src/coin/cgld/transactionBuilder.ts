@@ -1,6 +1,9 @@
 import { BaseCoin as CoinConfig } from '@bitgo/statics/dist/src/base';
+import { RLP } from 'ethers/utils';
+import { bigNumberify } from 'ethers/utils/bignumber';
 import { Eth } from '../../index';
 import { BaseTransaction, TransactionType } from '../baseCoin';
+import { TxData } from '../eth/iface';
 import { Transaction } from './transaction';
 
 export class TransactionBuilder extends Eth.TransactionBuilder {
@@ -12,7 +15,35 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
   /** @inheritdoc */
   protected fromImplementation(rawTransaction: string): Transaction {
     this._serializedTransaction = rawTransaction;
-    const tx = new Transaction(this._coinConfig, rawTransaction);
+    const decodedTx = RLP.decode(rawTransaction);
+    const [
+      rawNonce,
+      rawGasPrice,
+      rawGasLimit,
+      rawFeeCurrency,
+      rawGatewayFeeRecipient,
+      rawGatewayFee,
+      rawTo,
+      rawValue,
+      rawData,
+      rawV,
+      rawR,
+      rawS,
+    ] = decodedTx;
+    const parsedTransaction: TxData = {
+      nonce: bigNumberify(rawNonce).toNumber(),
+      gasPrice: bigNumberify(rawGasPrice).toNumber(),
+      gasLimit: bigNumberify(rawGasLimit).toNumber(),
+      to: rawTo,
+      value: bigNumberify(rawValue).toString(),
+      data: rawData,
+      chainId: 44786,
+      v: rawV,
+      r: rawR,
+      s: rawS,
+    };
+    const tx = this.transaction;
+    tx.setTransactionData(parsedTransaction);
     return tx;
   }
 
@@ -20,7 +51,7 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
   async buildImplementation(): Promise<BaseTransaction> {
     // If the from() method was called, use the serialized transaction as a base
     if (this._serializedTransaction) {
-      this.transaction.initFromSerializedTransaction(this._serializedTransaction);
+      this.transaction = this.fromImplementation(this._serializedTransaction);
     } else {
       let transactionData;
       switch (this._type) {

@@ -1,10 +1,7 @@
 import should from 'should';
-import { RLP } from 'ethers/utils';
 import { TransactionType } from '../../../../src/coin/baseCoin/';
 import { getBuilder, Eth } from '../../../../src';
 import * as testData from '../../../resources/eth/eth';
-import { formatTransaction } from '../../../../src/coin/eth/utils';
-import { getContractData } from '../../../../src/coin/eth/utils';
 import { Transaction } from '../../../../src/coin/eth';
 import { Fee } from '../../../../src/coin/eth/iface';
 
@@ -90,7 +87,6 @@ describe('Eth Transaction builder', function() {
       should.equal(txJson.gasPrice, testData.TXDATA.gasPrice);
       should.equal(txJson.gasLimit, testData.TXDATA.gasLimit);
       should.equal(txJson.data, testData.TXDATA.data);
-      should.equal(tx.toBroadcastFormat(), testData.ENCODED_TRANSACTION);
     });
 
     it('a wallet initialization transaction with nonce 0', async () => {

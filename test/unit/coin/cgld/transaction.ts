@@ -14,18 +14,6 @@ describe('Celo Transaction', function() {
     });
   });
 
-  describe('should construct a valid transaction', function() {
-    it('set parsed transaction data', () => {
-      const tx = new Transaction(coins.get('cgld'), testData.TXDATA);
-      should.equal(tx.toJson(), testData.TXDATA);
-    });
-
-    it('set encoded transaction data', () => {
-      const tx = new Transaction(coins.get('cgld'), testData.ENCODED_TRANSACTION);
-      should.equal(tx.toBroadcastFormat(), testData.ENCODED_TRANSACTION);
-    });
-  });
-
   describe('should return valid transaction', function() {
     const tx = new Transaction(coins.get('cgld'));
     tx.setTransactionData(testData.TXDATA);

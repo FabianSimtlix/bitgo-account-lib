@@ -2,8 +2,6 @@
  * Ethereum transaction model
  */
 import { BaseCoin as CoinConfig } from '@bitgo/statics';
-import { RLP } from 'ethers/utils';
-import { bigNumberify } from 'ethers/utils/bignumber';
 import { BaseTransaction, TransactionType } from '../baseCoin';
 import { BaseKey } from '../baseCoin/iface';
 import { InvalidTransactionError } from '../baseCoin/errors';
@@ -21,13 +19,8 @@ export class Transaction extends BaseTransaction {
    * @param {Readonly<CoinConfig>} coinConfig
    * @param {TxData | string} txData The object transaction data or encoded transaction data
    */
-  constructor(coinConfig: Readonly<CoinConfig>, txData?: TxData | string) {
+  constructor(coinConfig: Readonly<CoinConfig>) {
     super(coinConfig);
-    if (typeof txData === 'string') {
-      this._encodedTransaction = txData;
-    } else {
-      this._parsedTransaction = txData;
-    }
   }
 
   /**
@@ -82,28 +75,5 @@ export class Transaction extends BaseTransaction {
       throw new InvalidTransactionError('Empty transaction');
     }
     return this._parsedTransaction;
-  }
-
-  /**
-   * Initialize the transaction fields based on another serialized transaction.
-   *
-   * @param {string} serializedTransaction Transaction in broadcast format.
-   */
-  initFromSerializedTransaction(serializedTransaction: string): void {
-    this._encodedTransaction = serializedTransaction;
-    const decodedTx = RLP.decode(serializedTransaction);
-    const [rawNonce, rawGasPrice, rawGasLimit, rawTo, rawValue, rawData, rawV, rawR, rawS] = decodedTx;
-    const parsedTransaction: TxData = {
-      nonce: bigNumberify(rawNonce).toNumber(),
-      gasPrice: bigNumberify(rawGasPrice).toNumber(),
-      gasLimit: bigNumberify(rawGasLimit).toNumber(),
-      to: rawTo,
-      value: bigNumberify(rawValue).toNumber(),
-      data: rawData,
-      v: bigNumberify(rawV).toNumber(),
-      r: rawR,
-      s: rawS,
-    };
-    this._parsedTransaction = parsedTransaction;
   }
 }

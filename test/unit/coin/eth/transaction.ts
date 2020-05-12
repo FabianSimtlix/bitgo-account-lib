@@ -11,7 +11,8 @@ describe('ETH Transaction', function() {
   });
 
   describe('should return valid transaction', function() {
-    const tx = new Transaction(coins.get('eth'), testData.TXDATA);
+    const tx = new Transaction(coins.get('eth'));
+    tx.setTransactionData(testData.TXDATA);
     should.equal(tx.toJson(), testData.TXDATA);
     should.throws(() => tx.toBroadcastFormat());
   });
@@ -23,14 +24,16 @@ describe('ETH Transaction', function() {
     });
 
     it('valid', function() {
-      const tx = new Transaction(coins.get('eth'), testData.TXDATA);
+      const tx = new Transaction(coins.get('eth'));
+      tx.setTransactionData(testData.TXDATA);
       return tx.sign(testData.KEYPAIR_PRV).should.be.fulfilled();
     });
   });
 
   describe('should return encoded tx', function() {
     it('valid sign', async function() {
-      const tx = new Transaction(coins.get('eth'), testData.TXDATA);
+      const tx = new Transaction(coins.get('eth'));
+      tx.setTransactionData(testData.TXDATA);
       await tx.sign(testData.KEYPAIR_PRV);
       should.equal(tx.toBroadcastFormat(), testData.ENCODED_TRANSACTION);
     });
