@@ -1,4 +1,5 @@
 import should from 'should';
+import { Transaction as EthTx } from 'ethereumjs-tx';
 import { TransactionType } from '../../../../src/coin/baseCoin/';
 import { getBuilder, Eth } from '../../../../src';
 import * as testData from '../../../resources/eth/eth';
@@ -122,22 +123,6 @@ describe('Eth Transaction builder', function() {
       }).should.be.rejectedWith('Invalid transaction: missing fee');
     });
 
-    it('a wallet initialization without chain id', async () => {
-      await buildWalletInitialization({
-        fee: {
-          fee: '10',
-          gasLimit: '10',
-        },
-        source: new Eth.KeyPair({ prv: sourcePrv }).getAddress(),
-        owners: [
-          new Eth.KeyPair({ prv: sourcePrv }).getAddress(),
-          new Eth.KeyPair({ pub: pub1 }).getAddress(),
-          new Eth.KeyPair({ pub: pub2 }).getAddress(),
-        ],
-        counter: 0,
-      }).should.be.rejectedWith('Invalid transaction: missing chain id');
-    });
-
     it('a wallet initialization without source', async () => {
       await buildWalletInitialization({
         fee: {
@@ -231,7 +216,7 @@ describe('Eth Transaction builder', function() {
       txBuilder.owner('0xf10C8f42BD63D0AeD3338A6B2b661BC6D9fa7C44');
       txBuilder.owner('0xa4b5666FB4fFEA84Dd848845E1114b84146de4b3');
       txBuilder.sign({ key: defaultKeyPair.getKeys().prv });
-      const tx = await txBuilder.build(); //shoud build and sign
+      const tx = await txBuilder.build();
 
       tx.type.should.equal(TransactionType.WalletInitialization);
       const txJson = tx.toJson();
@@ -241,6 +226,30 @@ describe('Eth Transaction builder', function() {
       should.equal(txJson.chainId, 42);
       should.equal(tx.toBroadcastFormat(), testData.TX_BROADCAST);
     });
+
+	  it('an init transaction from serialized', async () => {
+		  const txBuilder: any = getBuilder('eth');
+		  txBuilder.from(testData.UNSIGNED_INITIALIZATION_TX);
+		  txBuilder.source(defaultKeyPair.getAddress());
+		  txBuilder.sign({ key: defaultKeyPair.getKeys().prv });
+		  const tx = await txBuilder.build();
+
+		  tx.type.should.equal(TransactionType.WalletInitialization);
+		  const txJson = tx.toJson();
+		  txJson.gasLimit.should.equal('1000');
+		  txJson.gasPrice.should.equal('10');
+		  should.equal(txJson.nonce, 1);
+		  should.equal(tx.toBroadcastFormat(), testData.TX_BROADCAST);
+
+		  // now rebuild from the signed serialized tx and make sure it stays the same
+		  const newTxBuilder: any = getBuilder('eth');
+		  newTxBuilder.from(tx.toBroadcastFormat());
+		  newTxBuilder.source(defaultKeyPair.getAddress());
+		  const newTx = await newTxBuilder.build();
+		  should.equal(newTx.toBroadcastFormat(), tx.toBroadcastFormat());
+
+		  new EthTx(newTx.toBroadcastFormat()).verifySignature().should.equal(true);
+	  });
   });
 
   describe('should fail to sign', () => {

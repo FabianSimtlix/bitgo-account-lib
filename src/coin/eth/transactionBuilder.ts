@@ -4,15 +4,15 @@ import { RLP } from 'ethers/utils';
 import * as Crypto from '../../utils/crypto';
 import { BaseTransaction, BaseTransactionBuilder, TransactionType } from '../baseCoin';
 import { BaseAddress, BaseKey } from '../baseCoin/iface';
-import { Transaction } from '../eth';
+import { Transaction, Utils } from './';
 import {
-  BuildTransactionError,
-  SigningError,
-  InvalidTransactionError,
-  ParseTransactionError,
+	BuildTransactionError,
+	InvalidTransactionError,
+	ParseTransactionError,
+	SigningError,
 } from '../baseCoin/errors';
 import { KeyPair } from './keyPair';
-import { Fee, TxJson } from './iface';
+import { Fee, Signature, TxJson } from './iface';
 import { getContractData, isValidEthAddress } from './utils';
 
 const DEFAULT_M = 3;
@@ -24,10 +24,12 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   private _transaction: Transaction;
   private _sourceKeyPair: KeyPair;
   private _type: TransactionType;
-  private _chainId: number;
+  private _chainId?: number;
   private _counter: number;
   private _fee: Fee;
   private _sourceAddress: string;
+  // The signature on the blockchain transaction itself
+  private _txSignature?: Signature;
 
   // Wallet initialization transaction parameters
   private _walletOwnerAddresses: string[];
@@ -74,6 +76,27 @@ export class TransactionBuilder extends BaseTransactionBuilder {
       const txData = JSON.parse(rawTransaction);
       tx = new Transaction(this._coinConfig, txData);
     }
+
+    const txJson = tx.toJson();
+	  this._type = Utils.classifyTransaction(txJson.data);
+	  this._fee = { fee: txJson.gasPrice, gasLimit: txJson.gasLimit };
+	  this._chainId = txJson.chainId!;
+	  this._counter = txJson.nonce;
+	  this._sourceAddress = txJson.from!;
+	  this._txSignature = txJson.signature;
+
+	  // parse data arguments to fill in required fields
+	  switch (this._type) {
+      case TransactionType.WalletInitialization:
+      	this._walletOwnerAddresses = Utils.decodeWalletCreationData(txJson.data);
+      	break;
+
+		  case TransactionType.Send:
+		  case TransactionType.AddressInitialization:
+			  throw new Error(`Transaction type not supported yet: ${this._type}`);
+		  default:
+        throw new Error(`Unsupported Transaction type: ${this._type}`);
+    }
     return tx;
   }
 
@@ -81,7 +104,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   protected signImplementation(key: BaseKey): BaseTransaction {
     const signer = new KeyPair({ prv: key.key });
     if (this._type != TransactionType.WalletInitialization) {
-      throw new SigningError('Cannot sign an unsupported operation'); //TODO: Remove this when other transactions are supported
+      throw new SigningError('Cannot sign an unsupported operation'); // TODO: Remove this when other transactions are supported
     }
     if (this._type === TransactionType.WalletInitialization && this._walletOwnerAddresses.length === 0) {
       throw new SigningError('Cannot sign an wallet initialization transaction without owners');
@@ -145,10 +168,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
         // assume sanitization happened in the builder function, just check that all required fields are set
         if (this._fee === undefined) {
           throw new BuildTransactionError('Invalid transaction: missing fee');
-        }
-
-        if (this._chainId === undefined) {
-          throw new BuildTransactionError('Invalid transaction: missing chain id');
         }
 
         if (this._walletOwnerAddresses === undefined) {
@@ -280,6 +299,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
       chainId: this._chainId,
       data: getContractData(this._walletOwnerAddresses),
       value: '0',
+	    signature: this._txSignature,
     };
   }
   //endregion

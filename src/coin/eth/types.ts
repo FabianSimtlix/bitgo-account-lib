@@ -23,6 +23,9 @@ export class EthTransaction {
         gasLimit: addHexPrefix(new BigNumber(tx.gasLimit).toString(16)),
         value: addHexPrefix(new BigNumber(tx.value).toString(16)),
         data: tx.data,
+	      v: tx.signature ? tx.signature.v : undefined,
+	      r: tx.signature ? tx.signature.r : undefined,
+	      s: tx.signature ? tx.signature.s : undefined,
       }),
       tx.chainId,
     );
@@ -56,6 +59,14 @@ export class EthTransaction {
     if (this.tx.verifySignature()) {
       result.from = bufferToHex(this.tx.getSenderAddress());
     }
+
+	  if (this.tx.v && this.tx.r && this.tx.s && this.tx.v.length !== 0) {
+		  result.signature = {
+			  v: addHexPrefix(bufferToHex(this.tx.v)),
+			  r: addHexPrefix(bufferToHex(this.tx.r)),
+			  s: addHexPrefix(bufferToHex(this.tx.s)),
+		  };
+	  }
 
     if (this.chainId) {
       result.chainId = this.chainId;

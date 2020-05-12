@@ -20,4 +20,11 @@ export interface TxJson {
   data: string;
   from?: string;
   chainId?: number;
+  signature?: Signature
+}
+
+export interface Signature {
+	v: string;
+	r: string;
+	s: string;
 }
