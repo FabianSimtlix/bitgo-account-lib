@@ -143,18 +143,27 @@ export class TransactionBuilder extends BaseTransactionBuilder {
     }
   }
 
+  protected validateBaseTransactionFields(): void {
+    if (this._fee === undefined) {
+      throw new BuildTransactionError('Invalid transaction: missing fee');
+    }
+    if (this._chainId === undefined) {
+      throw new BuildTransactionError('Invalid transaction: missing chain id');
+    }
+    if (this._counter === undefined) {
+      throw new BuildTransactionError('Invalid transaction: missing address counter');
+    }
+    if (!this._sourceAddress) {
+      throw new BuildTransactionError('Invalid transaction: missing source');
+    }
+  }
+
   /**@inheritdoc */
   validateTransaction(transaction: BaseTransaction): void {
     switch (this._type) {
       case TransactionType.WalletInitialization:
         // assume sanitization happened in the builder function, just check that all required fields are set
-        if (this._fee === undefined) {
-          throw new BuildTransactionError('Invalid transaction: missing fee');
-        }
-
-        if (this._chainId === undefined) {
-          throw new BuildTransactionError('Invalid transaction: missing chain id');
-        }
+        this.validateBaseTransactionFields();
 
         if (this._walletOwnerAddresses === undefined) {
           throw new BuildTransactionError('Invalid transaction: missing wallet owners');
@@ -166,18 +175,12 @@ export class TransactionBuilder extends BaseTransactionBuilder {
               `found: ${this._walletOwnerAddresses.length}`,
           );
         }
-
-        if (this._counter === undefined) {
-          throw new BuildTransactionError('Invalid transaction: missing address counter');
-        }
-
-        if (!this._sourceAddress) {
-          throw new BuildTransactionError('Invalid transaction: missing source');
-        }
-
         break;
       case TransactionType.Send:
-        //  TODO: add validations
+        this.validateBaseTransactionFields();
+        if (this._contractAddress === undefined) {
+          throw new BuildTransactionError('Invalid transaction: missing contract address');
+        }
         break;
       default:
         throw new BuildTransactionError('Unsupported transaction type');

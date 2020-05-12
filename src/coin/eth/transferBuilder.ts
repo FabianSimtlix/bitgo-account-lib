@@ -3,7 +3,6 @@ import EthereumAbi from 'ethereumjs-abi';
 import { BuildTransactionError } from '../baseCoin/errors';
 import { sendMultiSigData } from './utils';
 
-//TODO: check if we need to include validations on the fields
 /** ETH transfer builder */
 export class TransferBuilder {
   private _amount: number;
@@ -12,6 +11,12 @@ export class TransferBuilder {
   private _data: string;
   private _signKey: string;
   private _expirationTime: number;
+
+  //initialize with default values for non mandatory fields
+  constructor() {
+    this._expirationTime = this.getExpirationTime();
+    this._data = '0x';
+  }
 
   amount(amount: number): TransferBuilder {
     this._amount = amount;
@@ -28,8 +33,8 @@ export class TransferBuilder {
     return this;
   }
 
-  data(aditionalData: string): TransferBuilder {
-    this._data = aditionalData;
+  data(additionalData: string): TransferBuilder {
+    this._data = additionalData;
     return this;
   }
 
@@ -45,8 +50,6 @@ export class TransferBuilder {
 
   build(): string {
     if (this.hasMandatoryFields()) {
-      this._expirationTime = this._expirationTime || this.getExpirationTime();
-      this._data = this._data || '0x';
       const signature = this.ethSignMsgHash();
       return sendMultiSigData(
         this._toAddress,
