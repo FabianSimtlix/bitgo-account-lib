@@ -71,8 +71,8 @@ describe('Eth Transaction builder', function() {
 
       tx.type.should.equal(TransactionType.WalletInitialization);
       const txJson = tx.toJson();
-      txJson.gasLimit.should.equal('1000');
-      txJson.gasPrice.should.equal('10');
+      txJson.gasLimit.should.equal('0x3e8');
+      txJson.gasPrice.should.equal('0xa');
       should.equal(txJson.nonce, 1);
       should.equal(txJson.chainId, 42);
     });
@@ -95,8 +95,8 @@ describe('Eth Transaction builder', function() {
 
       tx.type.should.equal(TransactionType.WalletInitialization);
       const txJson = tx.toJson();
-      txJson.gasLimit.should.equal('1000');
-      txJson.gasPrice.should.equal('10');
+      txJson.gasLimit.should.equal('0x3e8');
+      txJson.gasPrice.should.equal('0xa');
       should.equal(txJson.nonce, 0);
       should.equal(txJson.chainId, 42);
     });
@@ -235,8 +235,8 @@ describe('Eth Transaction builder', function() {
 
       tx.type.should.equal(TransactionType.WalletInitialization);
       const txJson = tx.toJson();
-      txJson.gasLimit.should.equal('1000');
-      txJson.gasPrice.should.equal('10');
+      txJson.gasLimit.should.equal('0x3e8');
+      txJson.gasPrice.should.equal('0xa');
       should.equal(txJson.nonce, 1);
       should.equal(txJson.chainId, 42);
       should.equal(tx.toBroadcastFormat(), testData.TX_BROADCAST);
@@ -253,7 +253,7 @@ describe('Eth Transaction builder', function() {
       });
       txBuilder.chainId(31);
       const source = {
-        prv: sourcePrv,
+        prv: '8CAA00AE63638B0542A304823D66D96FF317A576F692663DB2F85E60FAB2590C',
       };
       const sourceKeyPair = new Eth.KeyPair(source);
       txBuilder.source(sourceKeyPair.getAddress());
@@ -270,7 +270,7 @@ describe('Eth Transaction builder', function() {
       });
       txBuilder.chainId(31);
       const source = {
-        prv: sourcePrv,
+        prv: '8CAA00AE63638B0542A304823D66D96FF317A576F692663DB2F85E60FAB2590C',
       };
       const sourceKeyPair = new Eth.KeyPair(source);
       txBuilder.source(sourceKeyPair.getAddress());
@@ -328,7 +328,7 @@ describe('Eth Transaction builder', function() {
       txBuilder.chainId(31);
       should.throws(() => txBuilder.validateTransaction(), 'Invalid transaction');
       const source = {
-        prv: sourcePrv,
+        prv: '8CAA00AE63638B0542A304823D66D96FF317A576F692663DB2F85E60FAB2590C',
       };
       const sourceKeyPair = new Eth.KeyPair(source);
       txBuilder.source(sourceKeyPair.getAddress());

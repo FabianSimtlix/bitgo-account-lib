@@ -4,11 +4,11 @@ export const ENCODED_TRANSACTION =
   '0xf85d010a822ee080808080808c11111111111111111111111183015e07a0cfdddecd7bd8aba329b6ad47deaeb0384815540a7c5f45a52bc159eef71f4389a00b195d91de4e57e14c91482e4b6655ada71e188997a3f149460d0b5d252fb300';
 
 export const TXDATA = {
-  nonce: 1,
+  nonce: '0x1',
   data: '0x111111111111111111111111',
-  gasLimit: 12000,
-  gasPrice: 10,
-  chainId: 44786,
+  gasLimit: '0x2ee0',
+  gasPrice: '0xa',
+  chainId: '0xaef2',
 };
 
 export const KEYPAIR_PRV = new KeyPair({ prv: '8CAA00AE63638B0542A304823D66D96FF317A576F692663DB2F85E60FAB2590C' });

@@ -3,7 +3,6 @@ import { isValidAddress, addHexPrefix, toBuffer } from 'ethereumjs-util';
 import EthereumAbi from 'ethereumjs-abi';
 import EthereumCommon from 'ethereumjs-common';
 import { Transaction } from 'ethereumjs-tx';
-import { BigNumber } from 'bignumber.js';
 import { SigningError } from '../baseCoin/errors';
 import { TxData } from './iface';
 import { KeyPair } from './keyPair';
@@ -27,7 +26,7 @@ export async function signInternal(
   if (!keyPair.getKeys().prv) {
     throw new SigningError('Missing private key');
   }
-  const ethTx = new Transaction(formatTransaction(transactionData), { common: customCommon });
+  const ethTx = new Transaction(transactionData, { common: customCommon });
   const privateKey = Buffer.from(keyPair.getKeys().prv as string, 'hex');
   ethTx.sign(privateKey);
   const encodedTransaction = ethTx.serialize().toString('hex');
@@ -43,22 +42,6 @@ export async function signInternal(
  */
 export async function sign(transactionData: TxData, keyPair: KeyPair): Promise<string> {
   return signInternal(transactionData, keyPair, testnetCommon);
-}
-
-/**
- * Format transaction to be signed
- *
- * @param {TxData} transactionData the transaction data with base values
- * @returns {TxData} the transaction data with hex values
- */
-function formatTransaction(transactionData: TxData): TxData {
-  return {
-    gasLimit: addHexPrefix(Number(transactionData.gasLimit).toString(16)),
-    gasPrice: addHexPrefix(new BigNumber(transactionData.gasPrice as string).toString(16)),
-    nonce: addHexPrefix(Number(transactionData.nonce).toString(16)),
-    to: transactionData.to,
-    data: transactionData.data,
-  };
 }
 
 /**
@@ -94,7 +77,7 @@ export function sendMultiSigData(
   sequenceId: number,
   signature: string,
 ): string {
-  const params = [to, value, Buffer.from('', 'hex'), expireTime, sequenceId, toBuffer(signature)];
+  const params = [to, value, toBuffer(data), expireTime, sequenceId, toBuffer(signature)];
   const types = ['address', 'uint', 'bytes', 'uint', 'uint', 'bytes'];
   const method = EthereumAbi.methodID('sendMultiSig', types);
   const args = EthereumAbi.rawEncode(types, params);

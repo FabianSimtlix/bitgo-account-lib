@@ -1,6 +1,5 @@
 import { signTransaction } from '@celo/contractkit/lib/utils/signing-utils';
 import { addHexPrefix } from 'ethereumjs-util';
-import { BigNumber } from 'bignumber.js';
 import { TxData } from '../eth/iface';
 import { KeyPair } from '../eth/keyPair';
 import { SigningError } from '../baseCoin/errors';
@@ -17,23 +16,25 @@ export async function sign(transactionData: TxData, keyPair: KeyPair): Promise<s
     throw new SigningError('Missing private key');
   }
   const privateKey = addHexPrefix(keyPair.getKeys().prv as string);
-  const rawTransaction = await signTransaction(formatTx(transactionData), privateKey);
+  const rawTransaction = await signTransaction(filterTx(transactionData), privateKey);
   return rawTransaction.raw;
 }
 
 /**
- * Format transaction to be signed
+ * Filters the unused fields of the tx to be used with @celo/contractkit
  *
- * @param {TxData} transactionData the transaction data with base values
- * @returns {TxData} the transaction data with hex values
+ * @param {TxData} transactionData the transaction data unfiltered
+ * @returns {TxData} the transaction data filtered with the available values
  */
-function formatTx(transactionData: TxData): TxData {
-  return {
-    nonce: addHexPrefix(Number(transactionData.nonce).toString(16)),
+function filterTx(transactionData: TxData): TxData {
+  const filtered: TxData = {
+    nonce: transactionData.nonce,
     data: transactionData.data,
-    gasLimit: addHexPrefix(Number(transactionData.gasLimit).toString(16)),
-    gasPrice: addHexPrefix(new BigNumber(transactionData.gasPrice as string).toString(16)),
-    chainId: addHexPrefix(Number(transactionData.chainId).toString(16)),
-    to: transactionData.to,
+    gasLimit: transactionData.gasLimit,
+    gasPrice: transactionData.gasPrice,
+    chainId: transactionData.chainId,
   };
+  if (transactionData.to) filtered.to = transactionData.to;
+
+  return filtered;
 }
