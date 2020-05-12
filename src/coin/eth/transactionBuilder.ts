@@ -277,7 +277,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   }
 
   transfer(amount: number): TransferBuilder {
-    if (this._type !== TransactionType.Send) {
+    if (this._type === TransactionType.Send) {
       this._transfer = new TransferBuilder().amount(amount);
       return this._transfer;
     }
@@ -292,6 +292,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   private buildSendTransaction(): TxData {
     const sendData = this.getSendData();
     return {
+      to: this._contractAddress,
       gasLimit: this._fee.gasLimit,
       gasPrice: this._fee.fee,
       nonce: this._counter,

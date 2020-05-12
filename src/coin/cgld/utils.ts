@@ -34,5 +34,6 @@ function formatTx(transactionData: TxData): TxData {
     gasLimit: addHexPrefix(Number(transactionData.gasLimit).toString(16)),
     gasPrice: addHexPrefix(new BigNumber(transactionData.gasPrice as string).toString(16)),
     chainId: addHexPrefix(Number(transactionData.chainId).toString(16)),
+    to: transactionData.to,
   };
 }

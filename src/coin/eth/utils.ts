@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer';
-import { isValidAddress, addHexPrefix } from 'ethereumjs-util';
+import { isValidAddress, addHexPrefix, toBuffer } from 'ethereumjs-util';
 import EthereumAbi from 'ethereumjs-abi';
 import EthereumCommon from 'ethereumjs-common';
 import { Transaction } from 'ethereumjs-tx';
@@ -56,6 +56,7 @@ function formatTransaction(transactionData: TxData): TxData {
     gasLimit: addHexPrefix(Number(transactionData.gasLimit).toString(16)),
     gasPrice: addHexPrefix(new BigNumber(transactionData.gasPrice as string).toString(16)),
     nonce: addHexPrefix(Number(transactionData.nonce).toString(16)),
+    to: transactionData.to,
     data: transactionData.data,
   };
 }
@@ -93,13 +94,11 @@ export function sendMultiSigData(
   sequenceId: number,
   signature: string,
 ): string {
-  const params = [to, value, data, expireTime, sequenceId, signature];
-  const types = ['address', 'uint256', 'bytes', 'uint256', 'uint256', 'bytes'];
-  const method = EthereumAbi.methodID('sendMultiSig', types).toString('hex');
-  const args = EthereumAbi.rawEncode(types, params)
-    .toString('hex')
-    .replace('0x', '');
-  return method + args;
+  const params = [to, value, Buffer.from('', 'hex'), expireTime, sequenceId, toBuffer(signature)];
+  const types = ['address', 'uint', 'bytes', 'uint', 'uint', 'bytes'];
+  const method = EthereumAbi.methodID('sendMultiSig', types);
+  const args = EthereumAbi.rawEncode(types, params);
+  return addHexPrefix(Buffer.concat([method, args]).toString('hex'));
 }
 
 /**

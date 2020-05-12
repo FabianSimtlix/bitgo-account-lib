@@ -1,3 +1,4 @@
+import ethUtil from 'ethereumjs-util';
 import EthereumAbi from 'ethereumjs-abi';
 import { BuildTransactionError } from '../baseCoin/errors';
 import { sendMultiSigData } from './utils';
@@ -44,7 +45,8 @@ export class TransferBuilder {
 
   build(): string {
     if (this.hasMandatoryFields()) {
-      this._expirationTime = this._expirationTime | this.getExpirationTime();
+      this._expirationTime = this._expirationTime || this.getExpirationTime();
+      this._data = this._data || '0x';
       const signature = this.ethSignMsgHash();
       return sendMultiSigData(
         this._toAddress,
@@ -72,15 +74,15 @@ export class TransferBuilder {
     const currentTime = new Date().getTime() / 1000;
     return currentTime + 3600;
   }
-  
+
   private getSHA(): (string | Buffer)[][] {
     return [
-      ['string','address', 'uint', 'bytes', 'uint', 'uint'],
+      ['string', 'address', 'uint', 'bytes', 'uint', 'uint'],
       [
         'ETHER',
-        new EthereumAbi.ethUtil.BN(EthereumAbi.ethUtil.stripHexPrefix(this._toAddress), 16),
+        new ethUtil.BN(ethUtil.stripHexPrefix(this._toAddress), 16),
         this._amount,
-        new Buffer(EthereumAbi.ethUtil.stripHexPrefix(this._data) || '', 'hex'),
+        new Buffer(ethUtil.stripHexPrefix(this._data) || '', 'hex'),
         this._expirationTime,
         this._sequenceId,
       ],
@@ -88,17 +90,18 @@ export class TransferBuilder {
   }
 
   private ethSignMsgHash(): string {
-    const signatureInParts = EthereumAbi.ethUtil.ecsign(
-      new Buffer(EthereumAbi.ethUtil.stripHexPrefix(this.getSHA), 'hex'),
+    const data = ethUtil.bufferToHex(EthereumAbi.soliditySHA3(...this.getSHA()));
+    const signatureInParts = ethUtil.ecsign(
+      new Buffer(ethUtil.stripHexPrefix(data), 'hex'),
       new Buffer(this._signKey, 'hex'),
     );
 
     // Assemble strings from r, s and v
-    const r = EthereumAbi.ethUtil.setLengthLeft(signatureInParts.r, 32).toString('hex');
-    const s = EthereumAbi.ethUtil.setLengthLeft(signatureInParts.s, 32).toString('hex');
-    const v = EthereumAbi.ethUtil.stripHexPrefix(EthereumAbi.ethUtil.intToHex(signatureInParts.v));
+    const r = ethUtil.setLengthLeft(signatureInParts.r, 32).toString('hex');
+    const s = ethUtil.setLengthLeft(signatureInParts.s, 32).toString('hex');
+    const v = ethUtil.stripHexPrefix(ethUtil.intToHex(signatureInParts.v));
 
     // Concatenate the r, s and v parts to make the signature string
-    return EthereumAbi.ethUtil.addHexPrefix(r.concat(s, v));
+    return ethUtil.addHexPrefix(r.concat(s, v));
   }
 }
