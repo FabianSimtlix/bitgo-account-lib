@@ -14,7 +14,7 @@ import {
 } from '../baseCoin/errors';
 import { KeyPair } from './keyPair';
 import { Fee, TxData } from './iface';
-import { getContractData, isValidEthAddress } from './utils';
+import { getContractData, isValidEthAddress, getAddressInitializationData } from './utils';
 
 const DEFAULT_M = 3;
 
@@ -60,6 +60,8 @@ export class TransactionBuilder extends BaseTransactionBuilder {
       case TransactionType.Send:
         transactionData = this.buildSendTransaction();
         break;
+      case TransactionType.AddressInitialization:
+        transactionData = this.buildAddressInitializationTransaction();
       default:
         throw new BuildTransactionError('Unsupported transaction type');
     }
@@ -178,6 +180,10 @@ export class TransactionBuilder extends BaseTransactionBuilder {
         break;
       case TransactionType.Send:
         //  TODO: add validations
+        break;
+      case TransactionType.AddressInitialization:
+        // TODO: add validations, most will be common with WalletInitialization
+        // and the contractAddress as in Send.
         break;
       default:
         throw new BuildTransactionError('Unsupported transaction type');
@@ -321,6 +327,24 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   }
   //endregion
 
+  // region AddressInitialization builder methods
+
+  /**
+   * Build a transaction to create a forwarder.
+   *
+   * @returns {TxData} The Ethereum transaction data
+   */
+  private buildAddressInitializationTransaction(): TxData {
+    return {
+      to: this._contractAddress,
+      gasLimit: addHexPrefix(new BigNumber(this._fee.gasLimit).toString(16)),
+      gasPrice: addHexPrefix(new BigNumber(this._fee.fee).toString(16)),
+      nonce: addHexPrefix(Number(this._counter).toString(16)),
+      data: getAddressInitializationData(),
+      chainId: addHexPrefix(Number(this._chainId).toString(16)),
+    };
+  }
+  //endregion
   /** @inheritdoc */
   protected get transaction(): Transaction {
     return this._transaction;
