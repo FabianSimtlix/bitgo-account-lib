@@ -59,6 +59,16 @@ export function getContractData(addresses: string[]): string {
 }
 
 /**
+ * Returns the create forwarder method calling data
+ *
+ * @returns {string} - the createForwarder method encoded
+ */
+export function getAddressInitializationData(): string {
+  const method = EthereumAbi.methodID('createForwarder', []);
+  return addHexPrefix(Buffer.from(method).toString('hex'));
+}
+
+/**
  * Returns the contract method encoded data
  *
  * @param {string} to destination address

@@ -110,7 +110,7 @@ describe('Eth Transaction builder', function() {
   describe('should fail to build', () => {
     it('an unsupported type of transaction', async () => {
       const txBuilder: any = getBuilder('eth');
-      txBuilder.type(TransactionType.AddressInitialization);
+      txBuilder.type(3);
       await txBuilder.build().should.be.rejectedWith('Unsupported transaction type');
     });
 
