@@ -32,6 +32,7 @@ export class CeloTransaction extends EthereumTransaction {
       this._from = toBuffer(tx.from);
     }
     this.raw = [this.nonce, this.gasPrice, this.gasLimit, this.to, this.value, this.data, this.v, this.r, this.s];
+    this.raw.splice(3, 0, toBuffer('0x'), toBuffer('0x'), toBuffer('0x'));
   }
 
   //TODO: implement this method
@@ -45,7 +46,7 @@ export class CeloTransaction extends EthereumTransaction {
 
   //TODO: clean method
   sign(privateKey: Buffer): void {
-    this.raw.splice(3, 0, toBuffer('0x'), toBuffer('0x'), toBuffer('0x'));
+    // this.raw.splice(3, 0, toBuffer('0x'), toBuffer('0x'), toBuffer('0x'));
     this._signatures = [this.v, this.r, this.s, privateKey];
   }
 

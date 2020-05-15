@@ -5,8 +5,8 @@ import { CgldTransaction } from './types';
 import * as Utils from './utils';
 
 export class Transaction extends Eth.Transaction {
-  constructor(_coinConfig: Readonly<CoinConfig>) {
-    super(_coinConfig);
+  constructor(_coinConfig: Readonly<CoinConfig>, txData?: TxData) {
+    super(_coinConfig, txData);
   }
 
   setTransactionData(txData: TxData): void {
@@ -15,8 +15,7 @@ export class Transaction extends Eth.Transaction {
 
   /**@inheritdoc */
   public static fromSerialized(coinConfig: Readonly<CoinConfig>, serializedTx: string): Transaction {
-    const tx = new Transaction(coinConfig);
-    tx.setTransactionData(Utils.deserialize(serializedTx)); //TODO: maybe create a constructor that takes 2 arguments
+    const tx = new Transaction(coinConfig, Utils.deserialize(serializedTx));
     return tx;
   }
 }
