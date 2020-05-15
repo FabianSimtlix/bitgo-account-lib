@@ -7,6 +7,8 @@ import { KeyPair } from '../eth';
 
 export class CeloTransaction extends EthereumTransaction {
   private _from: Buffer;
+  private _signatures: Buffer[];
+
   constructor(tx: TxData) {
     super();
     this.nonce = toBuffer(tx.nonce);
@@ -41,8 +43,10 @@ export class CeloTransaction extends EthereumTransaction {
     return rlp.encode(this.raw);
   }
 
+  //TODO: clean method
   sign(privateKey: Buffer): void {
     this.raw.splice(3, 0, toBuffer('0x'), toBuffer('0x'), toBuffer('0x'));
+    this._signatures = [this.v, this.r, this.s, privateKey];
   }
 
   //TODO: implement method
