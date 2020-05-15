@@ -1,42 +1,22 @@
 import { BaseCoin as CoinConfig } from '@bitgo/statics';
 import { Eth } from '../../index';
-import { InvalidTransactionError } from '../baseCoin/errors';
 import { TxData } from '../eth/iface';
-import { KeyPair, Utils } from './';
+import { CgldTransaction } from './types';
+import * as Utils from './utils';
 
 export class Transaction extends Eth.Transaction {
-  private _encodedTransaction?: string;
-
-  /** @inheritdoc */
-  constructor(_coinConfig: Readonly<CoinConfig>, txData?: TxData) {
-    super(_coinConfig, txData);
+  constructor(_coinConfig: Readonly<CoinConfig>) {
+    super(_coinConfig);
   }
 
-  /**
-   * Sign the transaction with the provided key. It does not check if the signer is allowed to sign
-   * it or not.
-   *
-   * @param {KeyPair} keyPair The key to sign the transaction with
-   */
-  async sign(keyPair: KeyPair): Promise<void> {
-    // Check if there is a transaction to sign
-    if (!this._ethTransaction) {
-      throw new InvalidTransactionError('Empty transaction');
-    }
-    this._encodedTransaction = await Utils.sign(this._ethTransaction.toJson(), keyPair);
-  }
-
-  /** @inheritdoc */
-  toBroadcastFormat(): any {
-    if (!this._encodedTransaction) {
-      return super.toBroadcastFormat();
-    }
-    return this._encodedTransaction;
+  setTransactionData(txData: TxData): void {
+    this._ethTransaction = CgldTransaction.fromJson(txData);
   }
 
   /**@inheritdoc */
   public static fromSerialized(coinConfig: Readonly<CoinConfig>, serializedTx: string): Transaction {
-    const tx = new Transaction(coinConfig, Utils.deserialize(serializedTx));
+    const tx = new Transaction(coinConfig);
+    tx.setTransactionData(Utils.deserialize(serializedTx)); //TODO: maybe create a constructor that takes 2 arguments
     return tx;
   }
 }
