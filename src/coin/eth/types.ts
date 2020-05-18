@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { Transaction as EthereumTx } from 'ethereumjs-tx';
 import { addHexPrefix, bufferToHex, bufferToInt, toBuffer } from 'ethereumjs-util';
-import { TxData } from './iface';
+import { EthLikeTransaction, TxData } from './iface';
 import { KeyPair } from './keyPair';
 
 export abstract class EthereumTransaction {
@@ -25,7 +25,7 @@ export abstract class EthereumTransaction {
 /**
  * An Ethereum transaction with helpers for serialization and deserialization.
  */
-export class EthTransaction {
+export class EthTransaction implements EthLikeTransaction {
   constructor(public tx: EthereumTransaction, protected chainId?: string) {}
 
   /**
@@ -56,14 +56,13 @@ export class EthTransaction {
     return new EthTransaction(new EthereumTx(tx));
   }
 
+	/** @inheritdoc */
   sign(keyPair: KeyPair) {
     const privateKey = Buffer.from(keyPair.getKeys().prv as string, 'hex');
     this.tx.sign(privateKey);
   }
 
-  /**
-   * Return the JSON representation of this transaction
-   */
+	/** @inheritdoc */
   toJson(): TxData {
     const result: TxData = {
       nonce: bufferToInt(this.tx.nonce),
@@ -88,9 +87,7 @@ export class EthTransaction {
     return result;
   }
 
-  /**
-   * Return the hex string serialization of this transaction
-   */
+	/** @inheritdoc */
   toSerialized(): string {
     return addHexPrefix(this.tx.serialize().toString('hex'));
   }
