@@ -16,7 +16,7 @@ describe('Eth send multi sig builder', function() {
         .contractSequenceId(2)
         .key(key);
       const result = builder.signAndBuild();
-      should.equal(result, testData.SEND_FOUNDS_DATA);
+      should.equal(result.serialize(), testData.SEND_FOUNDS_DATA);
     });
     it('should fail if a key param is missing', () => {
       const builder = new TransferBuilder()

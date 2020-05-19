@@ -14,6 +14,7 @@ import {
 import { KeyPair } from './keyPair';
 import { Fee, TxData } from './iface';
 import { getContractData, isValidEthAddress } from './utils';
+import { SendMultiSig, WalletInitialization } from './payload';
 
 const DEFAULT_M = 3;
 
@@ -98,10 +99,22 @@ export class TransactionBuilder extends BaseTransactionBuilder {
         this.fee({ fee: transactionJson.gasPrice, gasLimit: transactionJson.gasLimit });
         this.counter(transactionJson.nonce);
         this.chainId(Number(transactionJson.chainId));
-        const owners = Utils.decodeWalletCreationData(transactionJson.data);
+        //const owners = Utils.decodeWalletCreationData(transactionJson.data);
+        const owners = new WalletInitialization(transactionJson.data).addresses;
         owners.forEach(element => {
           this.owner(element);
         });
+        break;
+      case TransactionType.Send:
+        this.fee({ fee: transactionJson.gasPrice, gasLimit: transactionJson.gasLimit });
+        this.counter(transactionJson.nonce);
+        this.chainId(Number(transactionJson.chainId));
+        //const decodedData = Utils.decodeTransferData(transactionJson.data);
+        const decodedData = new SendMultiSig(transactionJson.data);
+        //TODO Get decoded data and set transfer builder
+        if (transactionJson.to === undefined) {
+          throw new BuildTransactionError('Undefined recipient address');
+        } else this._contractAddress = transactionJson.to;
         break;
       default:
         throw new BuildTransactionError('Unsupported transaction type');
@@ -314,7 +327,9 @@ export class TransactionBuilder extends BaseTransactionBuilder {
    * @returns {TxData} The Ethereum transaction data
    */
   private buildWalletInitializationTransaction(): TxData {
-    return this.buildBase(getContractData(this._walletOwnerAddresses));
+    const payload = new WalletInitialization(this._walletOwnerAddresses);
+    return this.buildBase(payload.serialize());
+    //return this.buildBase(getContractData(this._walletOwnerAddresses));
   }
   //endregion
 
@@ -334,7 +349,10 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   }
 
   private getSendData(): string {
-    if (this._transfer) return this._transfer.signAndBuild();
+    if (this._transfer) {
+      const payload = this._transfer.signAndBuild();
+      return payload.serialize();
+    }
     throw new BuildTransactionError('Missing transfer information');
   }
 

@@ -3,6 +3,7 @@ import EthereumAbi from 'ethereumjs-abi';
 import BigNumber from 'bignumber.js';
 import { BuildTransactionError, InvalidParameterValueError } from '../baseCoin/errors';
 import { isValidEthAddress, sendMultiSigData } from './utils';
+import { SendMultiSig } from './payload';
 
 /** ETH transfer builder */
 export class TransferBuilder {
@@ -53,17 +54,17 @@ export class TransferBuilder {
     return this;
   }
 
-  signAndBuild(): string {
+  signAndBuild(): SendMultiSig {
     if (this.hasMandatoryFields()) {
       this.ethSignMsgHash();
-      return sendMultiSigData(
-        this._toAddress,
-        new BigNumber(this._amount).toNumber(),
-        this._data,
-        this._expirationTime,
-        this._sequenceId,
-        this._signature,
-      );
+      return new SendMultiSig({
+        to: this._toAddress,
+        value: new BigNumber(this._amount).toNumber(),
+        data: this._data,
+        expireTime: this._expirationTime,
+        sequenceId: this._sequenceId,
+        signature: this._signature,
+      });
     }
     throw new BuildTransactionError(
       'Missing transfer mandatory fields. Amount, destination (to) address, signing key and sequenceID are mandatory',
