@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 import EthereumAbi from 'ethereumjs-abi';
-import { addHexPrefix, toBuffer } from 'ethereumjs-util';
+import { addHexPrefix, toBuffer, bufferToHex, bufferToInt } from 'ethereumjs-util';
 import * as BN from 'bn.js';
 import { BuildTransactionError } from '../baseCoin/errors';
 import {
@@ -72,15 +72,6 @@ export class WalletInitialization implements Payload {
   }
 }
 
-export interface SendMultiSigPayloadData {
-  to: string;
-  value: number;
-  data: string;
-  expireTime: number;
-  sequenceId: number;
-  signature: string;
-}
-
 export class SendMultiSig implements Payload {
   to: string;
   value: number;
@@ -88,8 +79,8 @@ export class SendMultiSig implements Payload {
   expireTime: number;
   sequenceId: number;
   signature: string;
-  private types = ['address', 'uint', 'bytes', 'uint', 'uint', 'bytes'];
-  private method = EthereumAbi.methodID('sendMultiSig', this.types);
+  private static _types = ['address', 'uint', 'bytes', 'uint', 'uint', 'bytes'];
+  private static _method = EthereumAbi.methodID('sendMultiSig', SendMultiSig._types);
 
   constructor(
     payload:
@@ -97,7 +88,7 @@ export class SendMultiSig implements Payload {
       | { to: string; value: number; data: string; expireTime: number; sequenceId: number; signature: string },
   ) {
     if (typeof payload === 'string') {
-      //TODO: deserialize
+      this.decodeTransferData(payload);
     } else {
       this.to = payload.to;
       this.value = payload.value;
@@ -118,14 +109,25 @@ export class SendMultiSig implements Payload {
       this.sequenceId,
       toBuffer(this.signature),
     ];
-    const args = EthereumAbi.rawEncode(this.types, params);
-    return addHexPrefix(Buffer.concat([this.method, args]).toString('hex'));
+    const args = EthereumAbi.rawEncode(SendMultiSig._types, params);
+    return addHexPrefix(Buffer.concat([SendMultiSig._method, args]).toString('hex'));
   }
 
-  private decodeTransferData(data: string): string[] {
+  private decodeTransferData(data: string) {
     if (!data.startsWith(sendMultisigMethodId)) {
       throw new BuildTransactionError(`Invalid transfer bytecode: ${data}`);
     }
-    return [''];
+    const splitBytecode = data.split(sendMultisigMethodId);
+    if (splitBytecode.length !== 2) {
+      throw new BuildTransactionError(`Invalid send bytecode: ${data}`);
+    }
+    const serializedArgs = Buffer.from(splitBytecode[1], 'hex');
+    const decoded = EthereumAbi.rawDecode(SendMultiSig._types, serializedArgs);
+    this.to = bufferToHex(decoded[0]);
+    this.value = bufferToInt(decoded[1]);
+    this.data = bufferToHex(decoded[2]);
+    this.expireTime = bufferToInt(decoded[3]);
+    this.sequenceId = bufferToInt(decoded[4]);
+    this.signature = bufferToHex(decoded[5]);
   }
 }

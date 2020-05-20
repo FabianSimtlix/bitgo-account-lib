@@ -36,6 +36,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   // Send transaction specific parameters
   private _transfer: TransferBuilder;
   private _contractAddress: string;
+  private _payload: SendMultiSig;
 
   /**
    * Public constructor.
@@ -110,7 +111,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
         this.counter(transactionJson.nonce);
         this.chainId(Number(transactionJson.chainId));
         //const decodedData = Utils.decodeTransferData(transactionJson.data);
-        const decodedData = new SendMultiSig(transactionJson.data);
+        this._payload = new SendMultiSig(transactionJson.data);
         //TODO Get decoded data and set transfer builder
         if (transactionJson.to === undefined) {
           throw new BuildTransactionError('Undefined recipient address');
@@ -340,18 +341,24 @@ export class TransactionBuilder extends BaseTransactionBuilder {
     else throw new BuildTransactionError('Invalid address: ' + address);
   }
 
-  transfer(amount: string): TransferBuilder {
-    if (this._type === TransactionType.Send) {
-      this._transfer = new TransferBuilder().amount(amount);
-      return this._transfer;
+  transfer(amount?: string): TransferBuilder {
+    if (this._type !== TransactionType.Send) {
+      throw new BuildTransactionError('Transfers can only be set for send transactions');
     }
-    throw new BuildTransactionError('Transfers can only be set for send transactions');
+    this._transfer = this._transfer || new TransferBuilder();
+    if (amount) {
+      this._transfer = this._transfer.amount(amount);
+    }
+    return this._transfer;
   }
 
   private getSendData(): string {
+    //If we have a builder, use it to create de send payload
     if (this._transfer) {
-      const payload = this._transfer.signAndBuild();
-      return payload.serialize();
+      this._payload = this._transfer.signAndBuild();
+    }
+    if (this._payload) {
+      return this._payload.serialize();
     }
     throw new BuildTransactionError('Missing transfer information');
   }
