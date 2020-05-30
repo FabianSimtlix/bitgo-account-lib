@@ -7,19 +7,21 @@ import { BaseAddress, BaseKey } from '../baseCoin/iface';
 import { Transaction, TransferBuilder, Utils } from '../eth';
 import {
   BuildTransactionError,
-  SigningError,
+  ForwarderAddressError,
   InvalidTransactionError,
   ParseTransactionError,
-  ForwarderAddressError,
+  SigningError,
 } from '../baseCoin/errors';
+import { StakingBuilder } from '../cgld/stakingBuilder';
+import { Staking } from '../cgld/staking';
 import { KeyPair } from './keyPair';
 import { Fee, SignatureParts, TxData } from './iface';
 import {
-  getContractData,
-  isValidEthAddress,
-  getAddressInitializationData,
   calculateForwarderAddress,
+  getAddressInitializationData,
+  getContractData,
   hasSignature,
+  isValidEthAddress,
 } from './utils';
 
 const DEFAULT_M = 3;
@@ -47,6 +49,9 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   private _contractAddress: string;
   private _contractCounter: number;
 
+  // Staking specific parameters
+  private _stakingBuilder: StakingBuilder;
+
   /**
    * Public constructor.
    *
@@ -72,6 +77,9 @@ export class TransactionBuilder extends BaseTransactionBuilder {
         break;
       case TransactionType.AddressInitialization:
         transactionData = this.buildAddressInitializationTransaction();
+        break;
+      case TransactionType.Staking_Lock:
+        transactionData = this.buildLockStakeTransaction();
         break;
       default:
         throw new BuildTransactionError('Unsupported transaction type');
@@ -438,6 +446,24 @@ export class TransactionBuilder extends BaseTransactionBuilder {
     }
     return calculateForwarderAddress(this._contractAddress, this._contractCounter);
   }
+  //endregion
+
+  //region Stake methods
+  private getStaking(): Staking {
+    if (!this._stakingBuilder) {
+      throw new BuildTransactionError('No staking information set');
+    }
+    return this._stakingBuilder.build();
+  }
+
+  private buildLockStakeTransaction(): TxData {
+    const stake = this.getStaking();
+    const data = this.buildBase(stake.serialize());
+    data.to = stake.address;
+    data.value = stake.amount;
+    return data;
+  }
+
   //endregion
 
   /** @inheritdoc */
