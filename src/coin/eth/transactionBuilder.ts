@@ -79,7 +79,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   }
 
   protected getTransactionData(): TxData {
-    let transactionData;
     switch (this._type) {
       case TransactionType.WalletInitialization:
         return this.buildWalletInitializationTransaction();
@@ -237,6 +236,8 @@ export class TransactionBuilder extends BaseTransactionBuilder {
         if (this._contractAddress === undefined) {
           throw new BuildTransactionError('Invalid transaction: missing contract address');
         }
+        break;
+      case TransactionType.Staking_Lock:
         break;
       default:
         throw new BuildTransactionError('Unsupported transaction type');

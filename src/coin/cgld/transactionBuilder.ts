@@ -38,7 +38,7 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
   }
 
   //region Stake methods
-  public lock(): StakingBuilder {
+  lock(): StakingBuilder {
     if (this._type !== TransactionType.Staking_Lock) {
       throw new BuildTransactionError('Lock can only be set for Staking Lock transactions type');
     }

@@ -1,6 +1,5 @@
-import { Buffer } from 'buffer';
 import EthereumAbi from 'ethereumjs-abi';
-import { addHexPrefix } from 'ethereumjs-util';
+import { addHexPrefix, toBuffer } from 'ethereumjs-util';
 
 export class Staking {
   constructor(
@@ -13,6 +12,6 @@ export class Staking {
 
   serialize(): string {
     const args = EthereumAbi.rawEncode(this._types, this._params);
-    return addHexPrefix(Buffer.concat([this._methodId, args]).toString('hex'));
+    return addHexPrefix(Buffer.concat([toBuffer(this._methodId), args]).toString('hex'));
   }
 }
