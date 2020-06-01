@@ -20,3 +20,7 @@ export enum AddressFormat {
   hex = 'hex',
   base58 = 'base58',
 }
+
+export enum StakingOperationsTypes {
+  LOCK,
+}

@@ -1,18 +1,8 @@
 import { isValidAmount } from '../eth/utils';
 import { InvalidParameterValueError, InvalidTransactionError } from '../baseCoin/errors';
+import { StakingOperationsTypes } from '../baseCoin/enum';
 import { Staking } from './staking';
-
-//TODO: get this values from config, currently it's set to baklava test network
-const LockOperation = {
-  //contractAddress: '0x26be4840a10be5BF67eBA736f91D27E7f2C80013',
-  contractAddress: '0xd01E94451aA66930Fb76287D502e6dc1689464FC',
-  methodId: '0xf83d08ba',
-  types: [],
-};
-
-export enum StakingOperationsTypes {
-  LOCK,
-}
+import { LockOperation } from './stakingUtils';
 
 export class StakingBuilder {
   private _amount: string;
