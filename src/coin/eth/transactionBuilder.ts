@@ -2,7 +2,7 @@ import { BaseCoin as CoinConfig } from '@bitgo/statics/dist/src/base';
 import BigNumber from 'bignumber.js';
 import { RLP } from 'ethers/utils';
 import * as Crypto from '../../utils/crypto';
-import { BaseTransaction, BaseTransactionBuilder, TransactionType } from '../baseCoin';
+import { BaseTransaction, BaseTransactionBuilder, TransactionType, StakingOperationsTypes } from '../baseCoin';
 import { BaseAddress, BaseKey } from '../baseCoin/iface';
 import { Transaction, TransferBuilder, Utils } from '../eth';
 import {
@@ -449,6 +449,16 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   //endregion
 
   //region Stake methods
+  public lock(): StakingBuilder {
+    if (this._type !== TransactionType.Staking_Lock) {
+      throw new BuildTransactionError('Lock can only be set for Staking Lock transactions type');
+    }
+    if (!this._stakingBuilder) {
+      this._stakingBuilder = new StakingBuilder().type(StakingOperationsTypes.LOCK);
+    }
+    return this._stakingBuilder;
+  }
+
   private getStaking(): Staking {
     if (!this._stakingBuilder) {
       throw new BuildTransactionError('No staking information set');
