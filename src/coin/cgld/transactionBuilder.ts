@@ -37,6 +37,14 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
     return tx;
   }
 
+  protected setTransactionTypeFields(decodedType: TransactionType, transactionJson: TxData): void {
+    if (decodedType === TransactionType.Staking_Lock) {
+      this._stakingBuilder = new StakingBuilder().type(StakingOperationsTypes.LOCK).amount(transactionJson.value);
+    } else {
+      super.setTransactionTypeFields(decodedType, transactionJson);
+    }
+  }
+
   //region Stake methods
   lock(): StakingBuilder {
     if (this._type !== TransactionType.Staking_Lock) {

@@ -121,6 +121,10 @@ export class TransactionBuilder extends BaseTransactionBuilder {
     if (transactionJson.from) {
       this.source(transactionJson.from);
     }
+    this.setTransactionTypeFields(decodedType, transactionJson);
+  }
+
+  protected setTransactionTypeFields(decodedType: TransactionType, transactionJson: TxData): void {
     switch (decodedType) {
       case TransactionType.WalletInitialization:
         const owners = Utils.decodeWalletCreationData(transactionJson.data);
