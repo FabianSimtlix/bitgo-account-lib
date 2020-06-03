@@ -1,15 +1,16 @@
 import { isValidAmount } from '../eth/utils';
-import { InvalidParameterValueError, InvalidTransactionError } from '../baseCoin/errors';
+import { InvalidParameterValueError, InvalidTransactionError, BuildTransactionError } from '../baseCoin/errors';
 import { StakingOperationsTypes } from '../baseCoin/enum';
 import { isValidEthAddress } from '../eth/utils';
 import { Staking } from './staking';
 import { LockOperation, VoteOperation } from './stakingUtils';
 
 export class StakingBuilder {
+  private DEFAULT_ADDRESS = '0x0000000000000000000000000000000000000000';
   private _amount: string;
   private _groupToVote: string;
-  private _lesser: string;
-  private _greater: string;
+  private _lesser = this.DEFAULT_ADDRESS;
+  private _greater = this.DEFAULT_ADDRESS;
   public stakingType: StakingOperationsTypes;
 
   constructor() {
@@ -58,6 +59,7 @@ export class StakingBuilder {
       case StakingOperationsTypes.LOCK:
         return this.buildLockStaking();
       case StakingOperationsTypes.VOTE:
+        this.validateVoteFields();
         const params = [this._groupToVote, this._amount, this._lesser, this._greater];
         return this.buildVoteStaking(params);
       default:
@@ -67,6 +69,16 @@ export class StakingBuilder {
 
   private buildLockStaking(): Staking {
     return new Staking(this._amount, LockOperation.contractAddress, LockOperation.methodId, LockOperation.types, []);
+  }
+
+  private validateVoteFields(): void {
+    if (!this._groupToVote) {
+      throw new BuildTransactionError('Missing group to vote for');
+    }
+
+    if (this._lesser === this._greater) {
+      throw new BuildTransactionError('Greater and lesser values should not the same');
+    }
   }
 
   private buildVoteStaking(params: string[]): Staking {
