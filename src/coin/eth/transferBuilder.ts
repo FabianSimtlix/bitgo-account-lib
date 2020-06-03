@@ -1,8 +1,7 @@
 import ethUtil from 'ethereumjs-util';
 import EthereumAbi from 'ethereumjs-abi';
 import BigNumber from 'bignumber.js';
-import { coins, BaseCoin } from '@bitgo/statics';
-import { CeloCoin } from '@bitgo/statics/dist/src/account';
+import { coins, BaseCoin, CeloCoin } from '@bitgo/statics';
 import { BuildTransactionError } from '../baseCoin/errors';
 import { InvalidParameterValueError } from '../baseCoin/errors';
 import { sendMultiSigData, sendMultiSigTokenData } from './utils';
@@ -13,6 +12,7 @@ import {
   sendMultisigTokenMethodId,
 } from './walletUtil';
 import { isValidEthAddress, isValidAmount } from './utils';
+import { TransferFieldsIndex } from './enum';
 
 /** ETH transfer builder */
 export class TransferBuilder {
@@ -224,17 +224,17 @@ export class TransferBuilder {
     let decoded;
     if (this.isTokenTransfer(data)) {
       decoded = this.getRawDecoded(sendMultiSigTokenTypes, this.getBufferedByteCode(sendMultisigTokenMethodId, data));
-      this._tokenContractAddress = ethUtil.bufferToHex(decoded[2]);
+      this._tokenContractAddress = ethUtil.bufferToHex(decoded[TransferFieldsIndex.DataOrTokenAddressIndex]);
     } else {
       decoded = this.getRawDecoded(sendMultiSigTypes, this.getBufferedByteCode(sendMultisigMethodId, data));
-      this._data = ethUtil.bufferToHex(decoded[2]);
+      this._data = ethUtil.bufferToHex(decoded[TransferFieldsIndex.DataOrTokenAddressIndex]);
     }
-    this._toAddress = ethUtil.bufferToHex(decoded[0]);
-    this._amount = new BigNumber(ethUtil.bufferToHex(decoded[1])).toFixed();
-    this._data = ethUtil.bufferToHex(decoded[2]);
-    this._expirationTime = ethUtil.bufferToInt(decoded[3]);
-    this._sequenceId = ethUtil.bufferToInt(decoded[4]);
-    this._signature = ethUtil.bufferToHex(decoded[5]);
+    this._toAddress = ethUtil.bufferToHex(decoded[TransferFieldsIndex.DestinationAddressIndex]);
+    this._amount = new BigNumber(ethUtil.bufferToHex(decoded[TransferFieldsIndex.AmountIndex])).toFixed();
+    this._data = ethUtil.bufferToHex(decoded[TransferFieldsIndex.DataOrTokenAddressIndex]);
+    this._expirationTime = ethUtil.bufferToInt(decoded[TransferFieldsIndex.ExpirationTimeIndex]);
+    this._sequenceId = ethUtil.bufferToInt(decoded[TransferFieldsIndex.SequenceIdIndex]);
+    this._signature = ethUtil.bufferToHex(decoded[TransferFieldsIndex.SignatureIndex]);
   }
 
   private isTokenTransfer(data: string): boolean {
