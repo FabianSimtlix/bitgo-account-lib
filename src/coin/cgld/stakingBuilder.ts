@@ -31,7 +31,7 @@ export class StakingBuilder {
 
   for(groupToVote: string): this {
     if (!isValidEthAddress(groupToVote)) {
-      throw new InvalidParameterValueError('Invalid value for stake transaction');
+      throw new InvalidParameterValueError('Invalid address to vote for');
     }
     this._groupToVote = groupToVote;
     return this;
@@ -39,7 +39,7 @@ export class StakingBuilder {
 
   lesser(lesser: string): this {
     if (!isValidEthAddress(lesser)) {
-      throw new InvalidParameterValueError('Invalid value for stake transaction');
+      throw new InvalidParameterValueError('Invalid address for lesser');
     }
     this._lesser = lesser;
     return this;
@@ -47,7 +47,7 @@ export class StakingBuilder {
 
   greater(greater: string): this {
     if (!isValidEthAddress(greater)) {
-      throw new InvalidParameterValueError('Invalid value for stake transaction');
+      throw new InvalidParameterValueError('Invalid address for greater');
     }
     this._greater = greater;
     return this;
