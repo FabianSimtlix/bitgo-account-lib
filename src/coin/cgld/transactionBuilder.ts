@@ -17,8 +17,11 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
   }
 
   protected getTransactionData(): TxData {
-    if (this._type === TransactionType.Staking_Lock) {
-      return this.buildLockStakeTransaction();
+    switch (this._type) {
+      case TransactionType.Staking_Lock:
+        return this.buildLockStakeTransaction();
+      case TransactionType.StakingVote:
+        return this.buildVoteStakingTransaction();
     }
     return super.getTransactionData();
   }
@@ -71,5 +74,30 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
     return data;
   }
 
-  //endregion
+  /**
+   * Gets the staking vote builder if exist, or creates a new one for this transaction and returns it
+   *
+   * @returns {StakingBuilder} the staking builder
+   */
+  vote(): StakingBuilder {
+    if (this._type !== TransactionType.StakingVote) {
+      throw new BuildTransactionError('Votes can only be set for a staking transaction');
+    }
+
+    if (!this._stakingBuilder || this._stakingBuilder.stakingType !== StakingOperationsTypes.VOTE) {
+      this._stakingBuilder = new StakingBuilder().type(StakingOperationsTypes.VOTE);
+    }
+
+    return this._stakingBuilder;
+  }
+
+  private buildVoteStakingTransaction(): TxData {
+    const stake = this.getStaking();
+    const data = this.buildBase(stake.serialize());
+    data.to = stake.address;
+
+    return data;
+  }
+
+  // endregion
 }

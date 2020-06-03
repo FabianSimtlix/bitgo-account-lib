@@ -7,7 +7,7 @@ export class Staking {
     public address: string,
     private _methodId: string,
     private _types: string[],
-    private _params: [],
+    private _params: string[],
   ) {}
 
   serialize(): string {
