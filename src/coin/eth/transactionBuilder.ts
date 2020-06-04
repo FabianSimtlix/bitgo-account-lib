@@ -241,7 +241,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
           throw new BuildTransactionError('Invalid transaction: missing contract address');
         }
         break;
-      case TransactionType.Staking_Lock:
+      case TransactionType.StakingLock:
         break;
       default:
         throw new BuildTransactionError('Unsupported transaction type');

@@ -17,7 +17,7 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
   }
 
   protected getTransactionData(): TxData {
-    if (this._type === TransactionType.Staking_Lock) {
+    if (this._type === TransactionType.StakingLock) {
       return this.buildLockStakeTransaction();
     }
     return super.getTransactionData();
@@ -38,8 +38,11 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
   }
 
   protected setTransactionTypeFields(decodedType: TransactionType, transactionJson: TxData): void {
-    if (decodedType === TransactionType.Staking_Lock) {
-      this._stakingBuilder = new StakingBuilder().type(StakingOperationsTypes.LOCK).amount(transactionJson.value);
+    if (decodedType === TransactionType.StakingLock) {
+      this._stakingBuilder = new StakingBuilder()
+        .type(StakingOperationsTypes.LOCK)
+        .amount(transactionJson.value)
+        .coin(this._coinConfig.name);
     } else {
       super.setTransactionTypeFields(decodedType, transactionJson);
     }
@@ -47,11 +50,11 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
 
   //region Stake methods
   lock(): StakingBuilder {
-    if (this._type !== TransactionType.Staking_Lock) {
+    if (this._type !== TransactionType.StakingLock) {
       throw new BuildTransactionError('Lock can only be set for Staking Lock transactions type');
     }
     if (!this._stakingBuilder) {
-      this._stakingBuilder = new StakingBuilder().type(StakingOperationsTypes.LOCK);
+      this._stakingBuilder = new StakingBuilder().type(StakingOperationsTypes.LOCK).coin(this._coinConfig.name);
     }
     return this._stakingBuilder;
   }

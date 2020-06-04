@@ -1,6 +1,6 @@
 import should from 'should';
 import { StakingBuilder } from '../../../../src/coin/cgld/stakingBuilder';
-import { LockOperation } from '../../../../src/coin/cgld/stakingUtils';
+import { getOperationParams } from '../../../../src/coin/cgld/stakingUtils';
 import { StakingOperationsTypes } from '../../../../src/coin/baseCoin';
 
 describe('Celo staking operations builder', function() {
@@ -9,12 +9,15 @@ describe('Celo staking operations builder', function() {
     builder = new StakingBuilder();
     builder.type(StakingOperationsTypes.LOCK);
     builder.amount('1000');
+    builder.coin('cgld');
   });
+
+  const lockOperation = getOperationParams(StakingOperationsTypes.LOCK, 'cgld');
 
   it('should build an staking lock operation', () => {
     const staking = builder.build();
-    should.equal(staking.address, LockOperation.contractAddress);
-    should.equal(staking.serialize(), LockOperation.methodId);
+    should.equal(staking.address, lockOperation.contractAddress);
+    should.equal(staking.serialize(), lockOperation.methodId);
   });
 
   it('should fail if amount is invalid number', () => {
