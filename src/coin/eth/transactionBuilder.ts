@@ -7,7 +7,6 @@ import { BaseAddress, BaseKey } from '../baseCoin/iface';
 import { Transaction, TransferBuilder, Utils } from '../eth';
 import {
   BuildTransactionError,
-  ForwarderAddressError,
   InvalidTransactionError,
   ParseTransactionError,
   SigningError,
