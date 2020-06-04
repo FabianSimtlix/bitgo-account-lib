@@ -20,6 +20,7 @@ describe('Celo staking transaction builder', () => {
 
   const coin = 'cgld';
   const LockOperation = getOperationParams(StakingOperationsTypes.LOCK, coin);
+  const VoteOperation = getOperationParams(StakingOperationsTypes.VOTE, coin);
 
   it('should build a lock transaction', async function() {
     txBuilder
@@ -29,6 +30,21 @@ describe('Celo staking transaction builder', () => {
     const txJson = (await txBuilder.build()).toJson();
     should.equal(txJson.to, LockOperation.contractAddress);
     should.equal(txJson.data, LockOperation.methodId);
+  });
+
+  it('should build a vote transaction', async function() {
+    txBuilder.type(TransactionType.StakingVote);
+    txBuilder
+      .vote()
+      .for('0x34084d6a4df32d9ad7395f4baad0db55c9c38145')
+      .lesser('0x1e5f2141701f2698b910d442ec7adee2af96f852')
+      .greater('0xa34da18dccd65a80b428815f57dc2075466e270e')
+      .coin(coin)
+      .amount('100');
+    txBuilder.sign({ key: testData.PRIVATE_KEY });
+    const txJson = (await txBuilder.build()).toJson();
+    should.equal(txJson.to, VoteOperation.contractAddress);
+    should.equal(txJson.data, testData.VOTE_DATA);
   });
 
   it('should sign and build a lock transaction from serialized', async function() {
@@ -42,6 +58,19 @@ describe('Celo staking transaction builder', () => {
     should.equal(txJson.data, LockOperation.methodId);
     should.equal(txJson.from, testData.ACCOUNT1);
     should.equal(tx.toBroadcastFormat(), testData.LOCK_BROADCAST_TX);
+  });
+
+  it('should sign and build a vote transaction from serialized', async function() {
+    const builder = getBuilder('cgld') as Cgld.TransactionBuilder;
+    builder.from(testData.VOTE_BROADCAST_TX);
+    builder.source(testData.KEYPAIR_PRV.getAddress());
+    builder.sign({ key: testData.PRIVATE_KEY });
+    const tx = await builder.build();
+    const txJson = tx.toJson();
+    should.equal(txJson.to, VoteOperation.contractAddress);
+    should.equal(txJson.data, testData.VOTE_DATA);
+    should.equal(txJson.from, testData.ACCOUNT1);
+    should.equal(tx.toBroadcastFormat(), testData.VOTE_BROADCAST_TX);
   });
 
   it('should fail to call lock if it is not an staking lock type transaction', () => {

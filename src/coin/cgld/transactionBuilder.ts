@@ -41,13 +41,19 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
   }
 
   protected setTransactionTypeFields(decodedType: TransactionType, transactionJson: TxData): void {
-    if (decodedType === TransactionType.StakingLock) {
-      this._stakingBuilder = new StakingBuilder()
-        .type(StakingOperationsTypes.LOCK)
-        .amount(transactionJson.value)
-        .coin(this._coinConfig.name);
-    } else {
-      super.setTransactionTypeFields(decodedType, transactionJson);
+    switch (decodedType) {
+      case TransactionType.StakingLock:
+        this._stakingBuilder = new StakingBuilder()
+          .type(StakingOperationsTypes.LOCK)
+          .amount(transactionJson.value)
+          .coin(this._coinConfig.name);
+        break;
+      case TransactionType.StakingVote:
+        this._stakingBuilder = new StakingBuilder(transactionJson.data);
+        break;
+      default:
+        super.setTransactionTypeFields(decodedType, transactionJson);
+        break;
     }
   }
 

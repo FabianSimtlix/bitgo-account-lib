@@ -271,3 +271,29 @@ export function hasSignature(txData: TxData): boolean {
     txData.s.length > 0
   );
 }
+
+/**
+ * Get the raw data decoded for some types
+ *
+ * @param {string[]} types ABI types definition
+ * @param {Buffer} serializedArgs encoded args
+ * @returns {Buffer[]} the decoded raw
+ */
+export function getRawDecoded(types: string[], serializedArgs: Buffer): Buffer[] {
+  return EthereumAbi.rawDecode(types, serializedArgs);
+}
+
+/**
+ * Get the buffered bytecode from rawData using a methodId as delimiter
+ *
+ * @param {string} methodId the hex encoded method Id
+ * @param {string} rawData the hex encoded raw data
+ * @returns {Buffer} data buffered bytecode
+ */
+export function getBufferedByteCode(methodId: string, rawData: string): Buffer {
+  const splitBytecode = rawData.split(methodId);
+  if (splitBytecode.length !== 2) {
+    throw new BuildTransactionError(`Invalid send bytecode: ${rawData}`);
+  }
+  return Buffer.from(splitBytecode[1], 'hex');
+}

@@ -21,12 +21,12 @@ const operations = {
   },
   [StakingOperationsTypes.VOTE]: {
     [alfajores]: {
-      contractAddress: '0x11fE523F93CAc185d12cB39CC3bd279D2de524F8',
+      contractAddress: '0x11fe523f93cac185d12cb39cc3bd279D2de524f8',
       methodId: '0x580d747a',
       types: ['address', 'uint256', 'address', 'address'],
     },
     [mainnet]: {
-      contractAddress: '0x8D6677192144292870907E3Fa8A5527fE55A7ff6',
+      contractAddress: '0x8d6677192144292870907e3fa8a5527fe55a7ff6',
       methodId: '0x580d747a',
       types: ['address', 'uint256', 'address', 'address'],
     },

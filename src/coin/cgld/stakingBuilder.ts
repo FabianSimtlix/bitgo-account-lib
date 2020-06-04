@@ -1,12 +1,14 @@
 import { coins } from '@bitgo/statics';
-import { isValidAmount, isValidEthAddress } from '../eth/utils';
+import ethUtil from 'ethereumjs-util';
+import { isValidAmount, isValidEthAddress, getRawDecoded, getBufferedByteCode } from '../eth/utils';
 import { BuildTransactionError, InvalidParameterValueError, InvalidTransactionError } from '../baseCoin/errors';
 import { StakingOperationsTypes } from '../baseCoin';
 import { Staking } from './staking';
-import { alfajores, getOperationParams, mainnet } from './stakingUtils';
+import { alfajores, getOperationParams, mainnet, VoteMethodId } from './stakingUtils';
+import { VoteFieldsIndex } from './enum';
 
 export class StakingBuilder {
-  private DEFAULT_ADDRESS = '0x0000000000000000000000000000000000000000';
+  private readonly DEFAULT_ADDRESS = '0x0000000000000000000000000000000000000000';
   private _amount: string;
   private _groupToVote: string;
   private _lesser = this.DEFAULT_ADDRESS;
@@ -14,9 +16,15 @@ export class StakingBuilder {
   private _type: StakingOperationsTypes;
   private _coinName: string;
 
-  constructor() {
-    this._type = StakingOperationsTypes.LOCK;
+  constructor();
+  constructor(serializedData: string);
+  constructor(serializedData?: string) {
     this._coinName = mainnet;
+    if (serializedData) {
+      this.decodeStakingData(serializedData);
+    } else {
+      this._type = StakingOperationsTypes.LOCK;
+    }
   }
 
   coin(name: string): this {
@@ -97,5 +105,20 @@ export class StakingBuilder {
   private buildVoteStaking(params: string[]): Staking {
     const operation = getOperationParams(this._type, this._coinName);
     return new Staking('0', operation.contractAddress, operation.methodId, operation.types, params);
+  }
+
+  private decodeStakingData(data: string): void {
+    if (!data.startsWith(VoteMethodId)) {
+      throw new BuildTransactionError(`Invalid staking bytecode: ${data}`);
+    }
+
+    this._type = StakingOperationsTypes.VOTE;
+    const operation = getOperationParams(this._type, this._coinName);
+    const decoded = getRawDecoded(operation.types, getBufferedByteCode(operation.methodId, data));
+
+    this._amount = ethUtil.bufferToHex(decoded[VoteFieldsIndex.AmountIndex]);
+    this._groupToVote = ethUtil.bufferToHex(decoded[VoteFieldsIndex.GroupToVoteIndex]);
+    this._lesser = ethUtil.bufferToHex(decoded[VoteFieldsIndex.LesserIndex]);
+    this._greater = ethUtil.bufferToHex(decoded[VoteFieldsIndex.GreaterIndex]);
   }
 }
