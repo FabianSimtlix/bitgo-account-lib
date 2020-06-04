@@ -1,9 +1,9 @@
-import { isValidAmount } from '../eth/utils';
-import { InvalidParameterValueError, InvalidTransactionError, BuildTransactionError } from '../baseCoin/errors';
-import { StakingOperationsTypes } from '../baseCoin/enum';
-import { isValidEthAddress } from '../eth/utils';
+import { coins } from '@bitgo/statics';
+import { isValidAmount, isValidEthAddress } from '../eth/utils';
+import { BuildTransactionError, InvalidParameterValueError, InvalidTransactionError } from '../baseCoin/errors';
+import { StakingOperationsTypes } from '../baseCoin';
 import { Staking } from './staking';
-import { LockOperation, VoteOperation } from './stakingUtils';
+import { alfajores, getOperationParams, mainnet } from './stakingUtils';
 
 export class StakingBuilder {
   private DEFAULT_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -11,14 +11,26 @@ export class StakingBuilder {
   private _groupToVote: string;
   private _lesser = this.DEFAULT_ADDRESS;
   private _greater = this.DEFAULT_ADDRESS;
-  public stakingType: StakingOperationsTypes;
+  private _type: StakingOperationsTypes;
+  private _coinName: string;
 
   constructor() {
-    this.stakingType = StakingOperationsTypes.LOCK;
+    this._type = StakingOperationsTypes.LOCK;
+    this._coinName = mainnet;
+  }
+
+  coin(name: string): this {
+    const coin = coins.get(name);
+    const coinName = coin.name;
+    if (!(coinName === mainnet || coinName === alfajores)) {
+      throw new BuildTransactionError('There was an error using that coin as a lock currency');
+    }
+    this._coinName = coinName;
+    return this;
   }
 
   type(type: StakingOperationsTypes): this {
-    this.stakingType = type;
+    this._type = type;
     return this;
   }
 
@@ -55,7 +67,7 @@ export class StakingBuilder {
   }
 
   build(): Staking {
-    switch (this.stakingType) {
+    switch (this._type) {
       case StakingOperationsTypes.LOCK:
         return this.buildLockStaking();
       case StakingOperationsTypes.VOTE:
@@ -63,12 +75,13 @@ export class StakingBuilder {
         const params = [this._groupToVote, this._amount, this._lesser, this._greater];
         return this.buildVoteStaking(params);
       default:
-        throw new InvalidTransactionError('Invalid staking operation: ' + this.stakingType);
+        throw new InvalidTransactionError('Invalid staking operation: ' + this._type);
     }
   }
 
   private buildLockStaking(): Staking {
-    return new Staking(this._amount, LockOperation.contractAddress, LockOperation.methodId, LockOperation.types, []);
+    const operation = getOperationParams(this._type, this._coinName);
+    return new Staking(this._amount, operation.contractAddress, operation.methodId, operation.types, []);
   }
 
   private validateVoteFields(): void {
@@ -82,6 +95,7 @@ export class StakingBuilder {
   }
 
   private buildVoteStaking(params: string[]): Staking {
-    return new Staking('0', VoteOperation.contractAddress, VoteOperation.methodId, VoteOperation.types, params);
+    const operation = getOperationParams(this._type, this._coinName);
+    return new Staking('0', operation.contractAddress, operation.methodId, operation.types, params);
   }
 }

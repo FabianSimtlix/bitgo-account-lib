@@ -1,14 +1,14 @@
 import should from 'should';
 import { Cgld, getBuilder } from '../../../../../src';
-import { TransactionType } from '../../../../../src/coin/baseCoin';
+import { StakingOperationsTypes, TransactionType } from '../../../../../src/coin/baseCoin';
 import * as testData from '../../../../resources/cgld/cgld';
-import { LockOperation } from '../../../../../src/coin/cgld/stakingUtils';
+import { getOperationParams } from '../../../../../src/coin/cgld/stakingUtils';
 
 describe('Celo staking transaction builder', () => {
   let txBuilder;
   beforeEach(() => {
     txBuilder = getBuilder('cgld') as Cgld.TransactionBuilder;
-    txBuilder.type(TransactionType.Staking_Lock);
+    txBuilder.type(TransactionType.StakingLock);
     txBuilder.fee({
       fee: '1000000000',
       gasLimit: '12100000',
@@ -18,8 +18,14 @@ describe('Celo staking transaction builder', () => {
     txBuilder.counter(1);
   });
 
+  const coin = 'cgld';
+  const LockOperation = getOperationParams(StakingOperationsTypes.LOCK, coin);
+
   it('should build a lock transaction', async function() {
-    txBuilder.lock().amount('100');
+    txBuilder
+      .lock()
+      .coin(coin)
+      .amount('100');
     const txJson = (await txBuilder.build()).toJson();
     should.equal(txJson.to, LockOperation.contractAddress);
     should.equal(txJson.data, LockOperation.methodId);

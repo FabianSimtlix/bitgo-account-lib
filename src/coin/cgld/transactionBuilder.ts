@@ -18,7 +18,7 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
 
   protected getTransactionData(): TxData {
     switch (this._type) {
-      case TransactionType.Staking_Lock:
+      case TransactionType.StakingLock:
         return this.buildLockStakeTransaction();
       case TransactionType.StakingVote:
         return this.buildVoteStakingTransaction();
@@ -41,8 +41,11 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
   }
 
   protected setTransactionTypeFields(decodedType: TransactionType, transactionJson: TxData): void {
-    if (decodedType === TransactionType.Staking_Lock) {
-      this._stakingBuilder = new StakingBuilder().type(StakingOperationsTypes.LOCK).amount(transactionJson.value);
+    if (decodedType === TransactionType.StakingLock) {
+      this._stakingBuilder = new StakingBuilder()
+        .type(StakingOperationsTypes.LOCK)
+        .amount(transactionJson.value)
+        .coin(this._coinConfig.name);
     } else {
       super.setTransactionTypeFields(decodedType, transactionJson);
     }
@@ -50,11 +53,11 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
 
   //region Stake methods
   lock(): StakingBuilder {
-    if (this._type !== TransactionType.Staking_Lock) {
+    if (this._type !== TransactionType.StakingLock) {
       throw new BuildTransactionError('Lock can only be set for Staking Lock transactions type');
     }
     if (!this._stakingBuilder) {
-      this._stakingBuilder = new StakingBuilder().type(StakingOperationsTypes.LOCK);
+      this._stakingBuilder = new StakingBuilder().type(StakingOperationsTypes.LOCK).coin(this._coinConfig.name);
     }
     return this._stakingBuilder;
   }
@@ -84,7 +87,7 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
       throw new BuildTransactionError('Votes can only be set for a staking transaction');
     }
 
-    if (!this._stakingBuilder || this._stakingBuilder.stakingType !== StakingOperationsTypes.VOTE) {
+    if (!this._stakingBuilder) {
       this._stakingBuilder = new StakingBuilder().type(StakingOperationsTypes.VOTE);
     }
 
