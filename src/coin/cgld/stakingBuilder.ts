@@ -113,10 +113,11 @@ export class StakingBuilder {
 
     this._type = StakingOperationsTypes.VOTE;
     const operation = getOperationParams(this._type, this._coinName);
-    const [groupToVote, amount, lesser, greater] = getRawDecoded(
-      operation.types,
-      getBufferedByteCode(operation.methodId, data),
-    );
+    const decoded = getRawDecoded(operation.types, getBufferedByteCode(operation.methodId, data));
+    if (decoded.length != 4) {
+      throw new BuildTransactionError(`Invalid decoded data: ${data}`);
+    }
+    const [groupToVote, amount, lesser, greater] = decoded;
 
     this._amount = ethUtil.bufferToHex(amount);
     this._groupToVote = ethUtil.bufferToHex(groupToVote);
