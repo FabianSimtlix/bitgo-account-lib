@@ -9,11 +9,17 @@ import { Staking } from './staking';
 
 export class TransactionBuilder extends Eth.TransactionBuilder {
   // Staking specific parameters
-  private _stakingBuilder: StakingBuilder;
+  private _stakingBuilder?: StakingBuilder;
 
   constructor(_coinConfig: Readonly<CoinConfig>) {
     super(_coinConfig);
     this.transaction = new Transaction(this._coinConfig);
+  }
+
+  /** @inheritdoc */
+  type(type: TransactionType): void {
+    super.type(type);
+    this._stakingBuilder = undefined;
   }
 
   protected getTransactionData(): TxData {
@@ -94,7 +100,7 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
     }
 
     if (!this._stakingBuilder) {
-      this._stakingBuilder = new StakingBuilder().type(StakingOperationsTypes.VOTE);
+      this._stakingBuilder = new StakingBuilder().type(StakingOperationsTypes.VOTE).coin(this._coinConfig.name);
     }
 
     return this._stakingBuilder;
