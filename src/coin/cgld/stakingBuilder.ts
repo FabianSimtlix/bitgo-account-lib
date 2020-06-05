@@ -5,7 +5,6 @@ import { BuildTransactionError, InvalidParameterValueError, InvalidTransactionEr
 import { StakingOperationsTypes } from '../baseCoin';
 import { Staking } from './staking';
 import { alfajores, getOperationParams, mainnet, VoteMethodId } from './stakingUtils';
-import { VoteFieldsIndex } from './enum';
 
 export class StakingBuilder {
   private readonly DEFAULT_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -80,8 +79,7 @@ export class StakingBuilder {
         return this.buildLockStaking();
       case StakingOperationsTypes.VOTE:
         this.validateVoteFields();
-        const params = [this._groupToVote, this._amount, this._lesser, this._greater];
-        return this.buildVoteStaking(params);
+        return this.buildVoteStaking();
       default:
         throw new InvalidTransactionError('Invalid staking operation: ' + this._type);
     }
@@ -102,8 +100,9 @@ export class StakingBuilder {
     }
   }
 
-  private buildVoteStaking(params: string[]): Staking {
+  private buildVoteStaking(): Staking {
     const operation = getOperationParams(this._type, this._coinName);
+    const params = [this._groupToVote, this._amount, this._lesser, this._greater];
     return new Staking('0', operation.contractAddress, operation.methodId, operation.types, params);
   }
 
@@ -114,11 +113,14 @@ export class StakingBuilder {
 
     this._type = StakingOperationsTypes.VOTE;
     const operation = getOperationParams(this._type, this._coinName);
-    const decoded = getRawDecoded(operation.types, getBufferedByteCode(operation.methodId, data));
+    const [groupToVote, amount, lesser, greater] = getRawDecoded(
+      operation.types,
+      getBufferedByteCode(operation.methodId, data),
+    );
 
-    this._amount = ethUtil.bufferToHex(decoded[VoteFieldsIndex.AmountIndex]);
-    this._groupToVote = ethUtil.bufferToHex(decoded[VoteFieldsIndex.GroupToVoteIndex]);
-    this._lesser = ethUtil.bufferToHex(decoded[VoteFieldsIndex.LesserIndex]);
-    this._greater = ethUtil.bufferToHex(decoded[VoteFieldsIndex.GreaterIndex]);
+    this._amount = ethUtil.bufferToHex(amount);
+    this._groupToVote = ethUtil.bufferToHex(groupToVote);
+    this._lesser = ethUtil.bufferToHex(lesser);
+    this._greater = ethUtil.bufferToHex(greater);
   }
 }
