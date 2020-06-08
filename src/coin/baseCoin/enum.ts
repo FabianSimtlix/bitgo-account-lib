@@ -23,7 +23,7 @@ export enum AddressFormat {
   base58 = 'base58',
 }
 
-export enum StakingOperationsTypes {
+export enum StakingOperationTypes {
   LOCK,
   VOTE,
 }

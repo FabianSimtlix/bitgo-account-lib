@@ -1,31 +1,30 @@
-import { StakingOperationsTypes } from '../baseCoin';
-
-export const alfajores = 'tcgld';
-export const mainnet = 'cgld';
+import { NetworkType } from '@bitgo/statics';
+import { StakingOperationTypes } from '../baseCoin';
+import { ContractMethodConfig } from '../eth/iface';
 
 export const LockMethodId = '0xf83d08ba';
 export const VoteMethodId = '0x580d747a';
 
 const operations = {
-  [StakingOperationsTypes.LOCK]: {
-    [alfajores]: {
+  [StakingOperationTypes.LOCK]: {
+    [NetworkType.TESTNET]: {
       contractAddress: '0x94c3e6675015d8479b648657e7ddfcd938489d0d',
-      methodId: '0xf83d08ba',
+      methodId: LockMethodId,
       types: [],
     },
-    [mainnet]: {
+    [NetworkType.MAINNET]: {
       contractAddress: '0x6cc083aed9e3ebe302a6336dbc7c921c9f03349e',
-      methodId: '0xf83d08ba',
+      methodId: LockMethodId,
       types: [],
     },
   },
-  [StakingOperationsTypes.VOTE]: {
-    [alfajores]: {
-      contractAddress: '0x11fe523f93cac185d12cb39cc3bd279D2de524f8',
+  [StakingOperationTypes.VOTE]: {
+    [NetworkType.TESTNET]: {
+      contractAddress: '0x11fe523f93cac185d12cb39cc3bd279d2de524f8',
       methodId: VoteMethodId,
       types: ['address', 'uint256', 'address', 'address'],
     },
-    [mainnet]: {
+    [NetworkType.MAINNET]: {
       contractAddress: '0x8d6677192144292870907e3fa8a5527fe55a7ff6',
       methodId: VoteMethodId,
       types: ['address', 'uint256', 'address', 'address'],
@@ -35,8 +34,8 @@ const operations = {
 
 /**
  * @param type
- * @param coinName
+ * @param network
  */
-export function getOperationParams(type: StakingOperationsTypes, coinName: string) {
-  return operations[type][coinName];
+export function getOperationConfig(type: StakingOperationTypes, network: NetworkType): ContractMethodConfig {
+  return operations[type][network];
 }

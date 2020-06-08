@@ -1,19 +1,20 @@
 import should from 'should';
+import { coins } from '@bitgo/statics';
 import { StakingBuilder } from '../../../../src/coin/cgld/stakingBuilder';
-import { getOperationParams } from '../../../../src/coin/cgld/stakingUtils';
-import { StakingOperationsTypes } from '../../../../src/coin/baseCoin';
+import { getOperationConfig } from '../../../../src/coin/cgld/stakingUtils';
+import { StakingOperationTypes } from '../../../../src/coin/baseCoin';
 
 describe('Celo staking operations builder', function() {
+  const coin = coins.get('tcgld');
   let builder: StakingBuilder;
   beforeEach(() => {
-    builder = new StakingBuilder();
-    builder.type(StakingOperationsTypes.LOCK);
+    builder = new StakingBuilder(coin);
+    builder.type(StakingOperationTypes.LOCK);
     builder.amount('1000');
-    builder.coin('cgld');
   });
 
-  const lockOperation = getOperationParams(StakingOperationsTypes.LOCK, 'cgld');
-  const voteOperation = getOperationParams(StakingOperationsTypes.VOTE, 'cgld');
+  const lockOperation = getOperationConfig(StakingOperationTypes.LOCK, coin.network.type);
+  const voteOperation = getOperationConfig(StakingOperationTypes.VOTE, coin.network.type);
 
   it('should build an staking lock operation', () => {
     const staking = builder.build();
@@ -22,7 +23,7 @@ describe('Celo staking operations builder', function() {
   });
 
   it('should build a staking vote operation', () => {
-    builder.type(StakingOperationsTypes.VOTE);
+    builder.type(StakingOperationTypes.VOTE);
     builder.for('0x34084d6a4df32d9ad7395f4baad0db55c9c38145');
     builder.lesser('0x1e5f2141701f2698b910d442ec7adee2af96f852');
     builder.greater('0xa34da18dccd65a80b428815f57dc2075466e270e');
@@ -35,7 +36,7 @@ describe('Celo staking operations builder', function() {
   });
 
   it('should build only setting the lesser', () => {
-    builder.type(StakingOperationsTypes.VOTE);
+    builder.type(StakingOperationTypes.VOTE);
     builder.for('0x34084d6a4df32d9ad7395f4baad0db55c9c38145');
     builder.lesser('0x1e5f2141701f2698b910d442ec7adee2af96f852');
     const staking = builder.build();
@@ -47,7 +48,7 @@ describe('Celo staking operations builder', function() {
   });
 
   it('should build only setting the greater', () => {
-    builder.type(StakingOperationsTypes.VOTE);
+    builder.type(StakingOperationTypes.VOTE);
     builder.for('0x34084d6a4df32d9ad7395f4baad0db55c9c38145');
     builder.greater('0xa34da18dccd65a80b428815f57dc2075466e270e');
     const staking = builder.build();
@@ -59,14 +60,14 @@ describe('Celo staking operations builder', function() {
   });
 
   it('should fail if the address to vote for is not set', () => {
-    builder.type(StakingOperationsTypes.VOTE);
+    builder.type(StakingOperationTypes.VOTE);
     should.throws(() => {
       builder.build();
     }, 'Missing group to vote for');
   });
 
   it('should fail if the lesser or greater are not set', () => {
-    builder.type(StakingOperationsTypes.VOTE);
+    builder.type(StakingOperationTypes.VOTE);
     builder.for('0x34084d6a4df32d9ad7395f4baad0db55c9c38145');
     should.throws(() => {
       builder.build();
@@ -74,21 +75,21 @@ describe('Celo staking operations builder', function() {
   });
 
   it('should fail if the group to vote address is invalid', () => {
-    builder.type(StakingOperationsTypes.VOTE);
+    builder.type(StakingOperationTypes.VOTE);
     should.throws(() => {
       builder.for('invalidaddress');
     }, 'Invalid address to vote for');
   });
 
   it('should fail if the lesser address is invalid', () => {
-    builder.type(StakingOperationsTypes.VOTE);
+    builder.type(StakingOperationTypes.VOTE);
     should.throws(() => {
       builder.lesser('invalidaddress');
     }, 'Invalid address for lesser');
   });
 
   it('should fail if the greater address is invalid', () => {
-    builder.type(StakingOperationsTypes.VOTE);
+    builder.type(StakingOperationTypes.VOTE);
     should.throws(() => {
       builder.greater('invalidaddress');
     }, 'Invalid address for greater');
