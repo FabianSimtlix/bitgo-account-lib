@@ -27,7 +27,8 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
       case TransactionType.StakingLock:
         return this.buildLockStakeTransaction();
       case TransactionType.StakingVote:
-        return this.buildVoteStakingTransaction();
+      case TransactionType.StakingActivate:
+        return this.buildElectionStakingTransaction();
     }
     return super.getTransactionData();
   }
@@ -54,6 +55,7 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
           .amount(transactionJson.value);
         break;
       case TransactionType.StakingVote:
+      case TransactionType.StakingActivate:
         this._stakingBuilder = new StakingBuilder(this._coinConfig, transactionJson.data);
         break;
       default:
@@ -105,7 +107,7 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
     return this._stakingBuilder;
   }
 
-  private buildVoteStakingTransaction(): TxData {
+  private buildElectionStakingTransaction(): TxData {
     const stake = this.getStaking();
     const data = this.buildBase(stake.serialize());
     data.to = stake.address;
@@ -113,5 +115,21 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
     return data;
   }
 
+  /**
+   * Gets the staking activate builder if exist, or creates a new one for this transaction and returns it
+   *
+   * @returns {StakingBuilder} the staking builder
+   */
+  activate(): StakingBuilder {
+    if (this._type !== TransactionType.StakingActivate) {
+      throw new BuildTransactionError('Activation can only be set for a staking transaction');
+    }
+
+    if (!this._stakingBuilder) {
+      this._stakingBuilder = new StakingBuilder(this._coinConfig).type(StakingOperationTypes.ACTIVATE);
+    }
+
+    return this._stakingBuilder;
+  }
   // endregion
 }

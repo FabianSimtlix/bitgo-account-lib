@@ -4,6 +4,7 @@ import { ContractMethodConfig } from '../eth/iface';
 
 export const LockMethodId = '0xf83d08ba';
 export const VoteMethodId = '0x580d747a';
+export const ActivateMethodId = '0x1c5a9d9c';
 
 const operations = {
   [StakingOperationTypes.LOCK]: {
@@ -28,6 +29,18 @@ const operations = {
       contractAddress: '0x8d6677192144292870907e3fa8a5527fe55a7ff6',
       methodId: VoteMethodId,
       types: ['address', 'uint256', 'address', 'address'],
+    },
+  },
+  [StakingOperationTypes.ACTIVATE]: {
+    [NetworkType.TESTNET]: {
+      contractAddress: '0x11fe523f93cac185d12cb39cc3bd279d2de524f8',
+      methodId: ActivateMethodId,
+      types: ['address'],
+    },
+    [NetworkType.MAINNET]: {
+      contractAddress: '0x8d6677192144292870907e3fa8a5527fe55a7ff6',
+      methodId: ActivateMethodId,
+      types: ['address'],
     },
   },
 };

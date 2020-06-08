@@ -13,6 +13,8 @@ export enum TransactionType {
   StakingLock,
   //Vote
   StakingVote,
+  //Activate
+  StakingActivate,
 }
 
 /**
@@ -26,4 +28,5 @@ export enum AddressFormat {
 export enum StakingOperationTypes {
   LOCK,
   VOTE,
+  ACTIVATE,
 }

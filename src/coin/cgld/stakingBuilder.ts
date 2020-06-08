@@ -4,12 +4,12 @@ import { isValidAmount, isValidEthAddress, getRawDecoded, getBufferedByteCode } 
 import { BuildTransactionError, InvalidParameterValueError, InvalidTransactionError } from '../baseCoin/errors';
 import { StakingOperationTypes } from '../baseCoin';
 import { StakingCall } from './stakingCall';
-import { getOperationConfig, VoteMethodId } from './stakingUtils';
+import { getOperationConfig, VoteMethodId, ActivateMethodId } from './stakingUtils';
 
 export class StakingBuilder {
   private readonly DEFAULT_ADDRESS = '0x0000000000000000000000000000000000000000';
   private _amount: string;
-  private _groupToVote: string;
+  private _validatorGroup: string;
   private _lesser = this.DEFAULT_ADDRESS;
   private _greater = this.DEFAULT_ADDRESS;
   private _type: StakingOperationTypes;
@@ -35,11 +35,11 @@ export class StakingBuilder {
     return this;
   }
 
-  for(groupToVote: string): this {
-    if (!isValidEthAddress(groupToVote)) {
-      throw new InvalidParameterValueError('Invalid address to vote for');
+  for(validatorGroup: string): this {
+    if (!isValidEthAddress(validatorGroup)) {
+      throw new InvalidParameterValueError('Invalid address to activate/vote for');
     }
-    this._groupToVote = groupToVote;
+    this._validatorGroup = validatorGroup;
     return this;
   }
 
@@ -67,6 +67,9 @@ export class StakingBuilder {
       case StakingOperationTypes.VOTE:
         this.validateVoteFields();
         return this.buildVoteStaking();
+      case StakingOperationTypes.ACTIVATE:
+        this.validateGroup();
+        return this.buildActivateStaking();
       default:
         throw new InvalidTransactionError('Invalid staking operation: ' + this._type);
     }
@@ -84,37 +87,57 @@ export class StakingBuilder {
   }
 
   private validateVoteFields(): void {
-    if (!this._groupToVote) {
-      throw new BuildTransactionError('Missing group to vote for');
-    }
+    this.validateGroup();
 
     if (this._lesser === this._greater) {
       throw new BuildTransactionError('Greater and lesser values should not the same');
     }
   }
 
+  private validateGroup(): void {
+    if (!this._validatorGroup) {
+      throw new BuildTransactionError('Missing group to activate/vote for');
+    }
+  }
+
   private buildVoteStaking(): StakingCall {
     const operation = getOperationConfig(this._type, this._coinConfig.network.type);
-    const params = [this._groupToVote, this._amount, this._lesser, this._greater];
+    const params = [this._validatorGroup, this._amount, this._lesser, this._greater];
+    return new StakingCall('0', operation.contractAddress, operation.methodId, operation.types, params);
+  }
+
+  private buildActivateStaking(): StakingCall {
+    const operation = getOperationConfig(this._type, this._coinConfig.network.type);
+    const params = [this._validatorGroup];
     return new StakingCall('0', operation.contractAddress, operation.methodId, operation.types, params);
   }
 
   private decodeStakingData(data: string): void {
-    if (!data.startsWith(VoteMethodId)) {
+    if (!(data.startsWith(VoteMethodId) || data.startsWith(ActivateMethodId))) {
       throw new BuildTransactionError(`Invalid staking bytecode: ${data}`);
     }
 
-    this._type = StakingOperationTypes.VOTE;
+    this._type = data.startsWith(VoteMethodId) ? StakingOperationTypes.VOTE : StakingOperationTypes.ACTIVATE;
     const operation = getOperationConfig(this._type, this._coinConfig.network.type);
     const decoded = getRawDecoded(operation.types, getBufferedByteCode(operation.methodId, data));
-    if (decoded.length != 4) {
-      throw new BuildTransactionError(`Invalid decoded data: ${data}`);
+    switch (this._type) {
+      case StakingOperationTypes.VOTE:
+        if (decoded.length != 4) {
+          throw new BuildTransactionError(`Invalid decoded data: ${data}`);
+        }
+        const [groupToVote, amount, lesser, greater] = decoded;
+        this._amount = ethUtil.bufferToHex(amount);
+        this._validatorGroup = ethUtil.bufferToHex(groupToVote);
+        this._lesser = ethUtil.bufferToHex(lesser);
+        this._greater = ethUtil.bufferToHex(greater);
+        break;
+      case StakingOperationTypes.ACTIVATE:
+        if (decoded.length != 1) {
+          throw new BuildTransactionError(`Invalid decoded data: ${data}`);
+        }
+        const [groupToActivate] = decoded;
+        this._validatorGroup = ethUtil.bufferToHex(groupToActivate);
+        break;
     }
-    const [groupToVote, amount, lesser, greater] = decoded;
-
-    this._amount = ethUtil.bufferToHex(amount);
-    this._groupToVote = ethUtil.bufferToHex(groupToVote);
-    this._lesser = ethUtil.bufferToHex(lesser);
-    this._greater = ethUtil.bufferToHex(greater);
   }
 }
