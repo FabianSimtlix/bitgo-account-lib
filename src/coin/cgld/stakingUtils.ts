@@ -20,12 +20,12 @@ const operations = {
   },
   [StakingOperationTypes.VOTE]: {
     [NetworkType.TESTNET]: {
-      contractAddress: '0x11fe523f93cac185d12cb39cc3bd279d2de524f8',
+      contractAddress: '0x8d6677192144292870907e3fa8a5527fe55a7ff6',
       methodId: VoteMethodId,
       types: ['address', 'uint256', 'address', 'address'],
     },
     [NetworkType.MAINNET]: {
-      contractAddress: '0x8d6677192144292870907e3fa8a5527fe55a7ff6',
+      contractAddress: '0x11fe523f93cac185d12cb39cc3bd279d2de524f8',
       methodId: VoteMethodId,
       types: ['address', 'uint256', 'address', 'address'],
     },

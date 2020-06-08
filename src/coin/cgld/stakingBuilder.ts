@@ -1,4 +1,3 @@
-import { coins } from '@bitgo/statics';
 import ethUtil from 'ethereumjs-util';
 import { BaseCoin as CoinConfig } from '@bitgo/statics/dist/src/base';
 import { isValidAmount, isValidEthAddress, getRawDecoded, getBufferedByteCode } from '../eth/utils';
@@ -20,8 +19,6 @@ export class StakingBuilder {
     this._coinConfig = coinConfig;
     if (serializedData) {
       this.decodeStakingData(serializedData);
-    } else {
-      this._type = StakingOperationTypes.LOCK;
     }
   }
 
