@@ -9,16 +9,25 @@ import { StakingCall } from './stakingCall';
 
 export class TransactionBuilder extends Eth.TransactionBuilder {
   // Staking specific parameters
-  private _stakingBuilder: StakingBuilder;
+  private _stakingBuilder?: StakingBuilder;
 
   constructor(_coinConfig: Readonly<CoinConfig>) {
     super(_coinConfig);
     this.transaction = new Transaction(this._coinConfig);
   }
 
+  /** @inheritdoc */
+  type(type: TransactionType): void {
+    super.type(type);
+    this._stakingBuilder = undefined;
+  }
+
   protected getTransactionData(): TxData {
-    if (this._type === TransactionType.StakingLock) {
-      return this.buildLockStakeTransaction();
+    switch (this._type) {
+      case TransactionType.StakingLock:
+        return this.buildLockStakeTransaction();
+      case TransactionType.StakingVote:
+        return this.buildVoteStakingTransaction();
     }
     return super.getTransactionData();
   }
@@ -38,12 +47,18 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
   }
 
   protected setTransactionTypeFields(decodedType: TransactionType, transactionJson: TxData): void {
-    if (decodedType === TransactionType.StakingLock) {
-      this._stakingBuilder = new StakingBuilder(this._coinConfig)
-        .type(StakingOperationTypes.LOCK)
-        .amount(transactionJson.value);
-    } else {
-      super.setTransactionTypeFields(decodedType, transactionJson);
+    switch (decodedType) {
+      case TransactionType.StakingLock:
+        this._stakingBuilder = new StakingBuilder(this._coinConfig)
+          .type(StakingOperationTypes.LOCK)
+          .amount(transactionJson.value);
+        break;
+      case TransactionType.StakingVote:
+        this._stakingBuilder = new StakingBuilder(this._coinConfig, transactionJson.data);
+        break;
+      default:
+        super.setTransactionTypeFields(decodedType, transactionJson);
+        break;
     }
   }
 
@@ -73,5 +88,30 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
     return data;
   }
 
-  //endregion
+  /**
+   * Gets the staking vote builder if exist, or creates a new one for this transaction and returns it
+   *
+   * @returns {StakingBuilder} the staking builder
+   */
+  vote(): StakingBuilder {
+    if (this._type !== TransactionType.StakingVote) {
+      throw new BuildTransactionError('Votes can only be set for a staking transaction');
+    }
+
+    if (!this._stakingBuilder) {
+      this._stakingBuilder = new StakingBuilder(this._coinConfig).type(StakingOperationTypes.VOTE);
+    }
+
+    return this._stakingBuilder;
+  }
+
+  private buildVoteStakingTransaction(): TxData {
+    const stake = this.getStaking();
+    const data = this.buildBase(stake.serialize());
+    data.to = stake.address;
+
+    return data;
+  }
+
+  // endregion
 }
