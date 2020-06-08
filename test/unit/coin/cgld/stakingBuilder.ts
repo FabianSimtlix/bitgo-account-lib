@@ -1,18 +1,19 @@
 import should from 'should';
+import { coins } from '@bitgo/statics';
 import { StakingBuilder } from '../../../../src/coin/cgld/stakingBuilder';
-import { getOperationParams } from '../../../../src/coin/cgld/stakingUtils';
-import { StakingOperationsTypes } from '../../../../src/coin/baseCoin';
+import { getOperationConfig } from '../../../../src/coin/cgld/stakingUtils';
+import { StakingOperationTypes } from '../../../../src/coin/baseCoin';
 
 describe('Celo staking operations builder', function() {
+  const coin = coins.get('tcgld');
   let builder: StakingBuilder;
   beforeEach(() => {
-    builder = new StakingBuilder();
-    builder.type(StakingOperationsTypes.LOCK);
+    builder = new StakingBuilder(coin);
+    builder.type(StakingOperationTypes.LOCK);
     builder.amount('1000');
-    builder.coin('cgld');
   });
 
-  const lockOperation = getOperationParams(StakingOperationsTypes.LOCK, 'cgld');
+  const lockOperation = getOperationConfig(StakingOperationTypes.LOCK, coin.network.type);
 
   it('should build an staking lock operation', () => {
     const staking = builder.build();

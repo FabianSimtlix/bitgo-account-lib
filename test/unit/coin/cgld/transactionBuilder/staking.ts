@@ -1,13 +1,14 @@
 import should from 'should';
+import { coins } from '@bitgo/statics';
 import { Cgld, getBuilder } from '../../../../../src';
-import { StakingOperationsTypes, TransactionType } from '../../../../../src/coin/baseCoin';
+import { StakingOperationTypes, TransactionType } from '../../../../../src/coin/baseCoin';
 import * as testData from '../../../../resources/cgld/cgld';
-import { getOperationParams } from '../../../../../src/coin/cgld/stakingUtils';
+import { getOperationConfig } from '../../../../../src/coin/cgld/stakingUtils';
 
 describe('Celo staking transaction builder', () => {
   let txBuilder;
   beforeEach(() => {
-    txBuilder = getBuilder('cgld') as Cgld.TransactionBuilder;
+    txBuilder = getBuilder('tcgld') as Cgld.TransactionBuilder;
     txBuilder.type(TransactionType.StakingLock);
     txBuilder.fee({
       fee: '1000000000',
@@ -18,13 +19,13 @@ describe('Celo staking transaction builder', () => {
     txBuilder.counter(1);
   });
 
-  const coin = 'cgld';
-  const LockOperation = getOperationParams(StakingOperationsTypes.LOCK, coin);
+  const coin = coins.get('tcgld');
+  const LockOperation = getOperationConfig(StakingOperationTypes.LOCK, coin.network.type);
 
   it('should build a lock transaction', async function() {
     txBuilder
       .lock()
-      .coin(coin)
+      .type(StakingOperationTypes.LOCK)
       .amount('100');
     const txJson = (await txBuilder.build()).toJson();
     should.equal(txJson.to, LockOperation.contractAddress);
@@ -32,7 +33,7 @@ describe('Celo staking transaction builder', () => {
   });
 
   it('should sign and build a lock transaction from serialized', async function() {
-    const builder = getBuilder('cgld') as Cgld.TransactionBuilder;
+    const builder = getBuilder('tcgld') as Cgld.TransactionBuilder;
     builder.from('0xed01843b9aca0083b8a1a08080809494c3e6675015d8479b648657e7ddfcd938489d0d6484f83d08ba82aef28080');
     builder.source(testData.KEYPAIR_PRV.getAddress());
     builder.sign({ key: testData.PRIVATE_KEY });

@@ -1,11 +1,11 @@
 import { BaseCoin as CoinConfig } from '@bitgo/statics/dist/src/base';
 import { Eth } from '../../index';
-import { TransactionType, StakingOperationsTypes } from '../baseCoin';
+import { TransactionType, StakingOperationTypes } from '../baseCoin';
 import { BuildTransactionError } from '../baseCoin/errors';
 import { TxData } from '../eth/iface';
 import { Transaction } from './transaction';
 import { StakingBuilder } from './stakingBuilder';
-import { Staking } from './staking';
+import { StakingCall } from './stakingCall';
 
 export class TransactionBuilder extends Eth.TransactionBuilder {
   // Staking specific parameters
@@ -39,10 +39,9 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
 
   protected setTransactionTypeFields(decodedType: TransactionType, transactionJson: TxData): void {
     if (decodedType === TransactionType.StakingLock) {
-      this._stakingBuilder = new StakingBuilder()
-        .type(StakingOperationsTypes.LOCK)
-        .amount(transactionJson.value)
-        .coin(this._coinConfig.name);
+      this._stakingBuilder = new StakingBuilder(this._coinConfig)
+        .type(StakingOperationTypes.LOCK)
+        .amount(transactionJson.value);
     } else {
       super.setTransactionTypeFields(decodedType, transactionJson);
     }
@@ -54,12 +53,12 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
       throw new BuildTransactionError('Lock can only be set for Staking Lock transactions type');
     }
     if (!this._stakingBuilder) {
-      this._stakingBuilder = new StakingBuilder().type(StakingOperationsTypes.LOCK).coin(this._coinConfig.name);
+      this._stakingBuilder = new StakingBuilder(this._coinConfig).type(StakingOperationTypes.LOCK);
     }
     return this._stakingBuilder;
   }
 
-  private getStaking(): Staking {
+  private getStaking(): StakingCall {
     if (!this._stakingBuilder) {
       throw new BuildTransactionError('No staking information set');
     }

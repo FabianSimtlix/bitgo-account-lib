@@ -1,20 +1,19 @@
-import { StakingOperationsTypes } from '../baseCoin';
-
-export const alfajores = 'tcgld';
-export const mainnet = 'cgld';
+import { NetworkType } from '@bitgo/statics';
+import { StakingOperationTypes } from '../baseCoin';
+import { ContractMethodConfig } from '../eth/iface';
 
 export const LockMethodId = '0xf83d08ba';
 
 const operations = {
-  [StakingOperationsTypes.LOCK]: {
-    [alfajores]: {
+  [StakingOperationTypes.LOCK]: {
+    [NetworkType.TESTNET]: {
       contractAddress: '0x94c3e6675015d8479b648657e7ddfcd938489d0d',
-      methodId: '0xf83d08ba',
+      methodId: LockMethodId,
       types: [],
     },
-    [mainnet]: {
+    [NetworkType.MAINNET]: {
       contractAddress: '0x6cc083aed9e3ebe302a6336dbc7c921c9f03349e',
-      methodId: '0xf83d08ba',
+      methodId: LockMethodId,
       types: [],
     },
   },
@@ -22,8 +21,8 @@ const operations = {
 
 /**
  * @param type
- * @param coinName
+ * @param network
  */
-export function getOperationParams(type: StakingOperationsTypes, coinName: string) {
-  return operations[type][coinName];
+export function getOperationConfig(type: StakingOperationTypes, network: NetworkType): ContractMethodConfig {
+  return operations[type][network];
 }
