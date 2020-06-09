@@ -23,12 +23,12 @@ const operations = {
     [NetworkType.TESTNET]: {
       contractAddress: '0x94c3e6675015d8479b648657e7ddfcd938489d0d',
       methodId: UnlockMethodId,
-      types: [],
+      types: ['uint256'],
     },
     [NetworkType.MAINNET]: {
       contractAddress: '0x6cc083aed9e3ebe302a6336dbc7c921c9f03349e',
       methodId: UnlockMethodId,
-      types: [],
+      types: ['uint256'],
     },
   },
   [StakingOperationTypes.VOTE]: {

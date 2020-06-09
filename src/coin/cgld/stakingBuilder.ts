@@ -88,7 +88,8 @@ export class StakingBuilder {
   private buildUnlockStaking(): StakingCall {
     // TODO : Code duplication
     const operation = getOperationConfig(this._type, this._coinConfig.network.type);
-    return new StakingCall(this._amount, operation.contractAddress, operation.methodId, operation.types, []);
+    const params = [this._amount];
+    return new StakingCall('0', operation.contractAddress, operation.methodId, operation.types, params);
   }
 
   private validateVoteFields(): void {
