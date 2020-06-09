@@ -73,13 +73,12 @@ describe('Celo Transaction builder for wallet initialization', () => {
       should.equal(newTx.toBroadcastFormat(), testData.TX_BROADCAST);
     });
 
-	  it('a signed init transaction from serialized 2', async () => {
-		  const newTxBuilder = getBuilder('cgld') as Cgld.TransactionBuilder;
-		  newTxBuilder.from(testData.SIGNED_WALLET_INIT_TX);
-		  newTxBuilder.source(testData.KEYPAIR_PRV.getAddress());
-		  const newTx = await newTxBuilder.build();
-		  should.exist(newTx.toJson().from);
-	  });
+    it('a signed init transaction from serialized 2', async () => {
+      const newTxBuilder = getBuilder('cgld') as Cgld.TransactionBuilder;
+      newTxBuilder.from(testData.TX_BROADCAST);
+      const newTx = await newTxBuilder.build();
+      should.exist(newTx.toJson().from);
+    });
   });
 
   describe('Should validate ', () => {
