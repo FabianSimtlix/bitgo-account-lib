@@ -15,6 +15,7 @@ describe('Celo staking operations builder', function() {
 
   const lockOperation = getOperationConfig(StakingOperationTypes.LOCK, coin.network.type);
   const voteOperation = getOperationConfig(StakingOperationTypes.VOTE, coin.network.type);
+  const activateOperation = getOperationConfig(StakingOperationTypes.ACTIVATE, coin.network.type);
 
   it('should build an staking lock operation', () => {
     const staking = builder.build();
@@ -59,11 +60,26 @@ describe('Celo staking operations builder', function() {
     );
   });
 
+  it('should build a staking activate operation', () => {
+    builder.type(StakingOperationTypes.ACTIVATE);
+    builder.for('0x34084d6a4df32d9ad7395f4baad0db55c9c38145');
+    const staking = builder.build();
+    should.equal(staking.address, voteOperation.contractAddress);
+    should.equal(staking.serialize(), '0x1c5a9d9c00000000000000000000000034084d6a4df32d9ad7395f4baad0db55c9c38145');
+  });
+
+  it('should fail if the activate address is not set', () => {
+    builder.type(StakingOperationTypes.ACTIVATE);
+    should.throws(() => {
+      builder.build();
+    }, 'Missing group to activate/vote for');
+  });
+
   it('should fail if the address to vote for is not set', () => {
     builder.type(StakingOperationTypes.VOTE);
     should.throws(() => {
       builder.build();
-    }, 'Missing group to vote for');
+    }, 'Missing group to activate/vote for');
   });
 
   it('should fail if the lesser or greater are not set', () => {

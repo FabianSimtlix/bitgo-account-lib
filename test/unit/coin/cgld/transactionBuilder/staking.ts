@@ -3,7 +3,7 @@ import { coins } from '@bitgo/statics';
 import { Cgld, getBuilder } from '../../../../../src';
 import { StakingOperationTypes, TransactionType } from '../../../../../src/coin/baseCoin';
 import * as testData from '../../../../resources/cgld/cgld';
-import { getOperationConfig } from '../../../../../src/coin/cgld/stakingUtils';
+import { getOperationConfig, ActivateMethodId } from '../../../../../src/coin/cgld/stakingUtils';
 
 describe('Celo staking transaction builder', () => {
   let txBuilder;
@@ -22,6 +22,7 @@ describe('Celo staking transaction builder', () => {
   const coin = coins.get('tcgld');
   const LockOperation = getOperationConfig(StakingOperationTypes.LOCK, coin.network.type);
   const VoteOperation = getOperationConfig(StakingOperationTypes.VOTE, coin.network.type);
+  const ActivateOperation = getOperationConfig(StakingOperationTypes.ACTIVATE, coin.network.type);
 
   it('should build a lock transaction', async function() {
     txBuilder
@@ -45,6 +46,17 @@ describe('Celo staking transaction builder', () => {
     const txJson = (await txBuilder.build()).toJson();
     should.equal(txJson.to, VoteOperation.contractAddress);
     should.equal(txJson.data, testData.VOTE_DATA);
+  });
+
+  it('should build an activate transaction', async function() {
+    txBuilder.type(TransactionType.StakingActivate);
+    txBuilder.activate().for('0x34084d6a4df32d9ad7395f4baad0db55c9c38145');
+    txBuilder.sign({ key: testData.PRIVATE_KEY });
+    const tx = await txBuilder.build();
+    const txJson = tx.toJson();
+    should.equal(txJson.to, ActivateOperation.contractAddress);
+    should.equal(txJson.data, testData.ACTIVATE_DATA);
+    should.equal(tx.toBroadcastFormat(), testData.ACTIVATE_BROADCAST_TX);
   });
 
   it('should sign and build a lock transaction from serialized', async function() {
@@ -71,6 +83,19 @@ describe('Celo staking transaction builder', () => {
     should.equal(txJson.data, testData.VOTE_DATA);
     should.equal(txJson.from, testData.ACCOUNT1);
     should.equal(tx.toBroadcastFormat(), testData.VOTE_BROADCAST_TX);
+  });
+
+  it('should sign and build a vote transaction from serialized', async function() {
+    const builder = getBuilder('tcgld') as Cgld.TransactionBuilder;
+    builder.from(testData.ACTIVATE_BROADCAST_TX);
+    builder.source(testData.KEYPAIR_PRV.getAddress());
+    builder.sign({ key: testData.PRIVATE_KEY });
+    const tx = await builder.build();
+    const txJson = tx.toJson();
+    should.equal(txJson.to, ActivateOperation.contractAddress);
+    should.equal(txJson.data, testData.ACTIVATE_DATA);
+    should.equal(txJson.from, testData.ACCOUNT1);
+    should.equal(tx.toBroadcastFormat(), testData.ACTIVATE_BROADCAST_TX);
   });
 
   it('should fail to call lock if it is not an staking lock type transaction', () => {
