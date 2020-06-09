@@ -3,6 +3,7 @@ import { StakingOperationTypes } from '../baseCoin';
 import { ContractMethodConfig } from '../eth/iface';
 
 export const LockMethodId = '0xf83d08ba';
+export const UnlockMethodId = '0x6198e339';
 export const VoteMethodId = '0x580d747a';
 
 const operations = {
@@ -15,6 +16,18 @@ const operations = {
     [NetworkType.MAINNET]: {
       contractAddress: '0x6cc083aed9e3ebe302a6336dbc7c921c9f03349e',
       methodId: LockMethodId,
+      types: [],
+    },
+  },
+  [StakingOperationTypes.UNLOCK]: {
+    [NetworkType.TESTNET]: {
+      contractAddress: '0x94c3e6675015d8479b648657e7ddfcd938489d0d',
+      methodId: UnlockMethodId,
+      types: [],
+    },
+    [NetworkType.MAINNET]: {
+      contractAddress: '0x6cc083aed9e3ebe302a6336dbc7c921c9f03349e',
+      methodId: UnlockMethodId,
       types: [],
     },
   },
