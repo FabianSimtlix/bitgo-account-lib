@@ -1,6 +1,6 @@
 export { KeyPair } from './keyPair';
 export { Transaction } from './transaction';
-export { TransactionBuilder } from './transactionBuilder';
+export { TransactionBuilder } from './builder/transactionBuilder';
 export { TransferBuilder } from './transferBuilder';
 
 import * as Interface from './iface';

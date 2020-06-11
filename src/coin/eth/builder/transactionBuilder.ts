@@ -1,27 +1,25 @@
 import { BaseCoin as CoinConfig } from '@bitgo/statics/dist/src/base';
 import BigNumber from 'bignumber.js';
 import { RLP } from 'ethers/utils';
-import * as Crypto from '../../utils/crypto';
-import { BaseTransaction, BaseTransactionBuilder, TransactionType } from '../baseCoin';
-import { BaseAddress, BaseKey } from '../baseCoin/iface';
-import { Transaction, TransferBuilder, Utils } from '../eth';
+import * as Crypto from '../../../utils/crypto';
+import { BaseTransaction, BaseTransactionBuilder, TransactionType } from '../../baseCoin';
+import { BaseAddress, BaseKey } from '../../baseCoin/iface';
+import { Transaction, TransferBuilder, Utils } from '../index';
 import {
   BuildTransactionError,
   SigningError,
   InvalidTransactionError,
   ParseTransactionError,
-} from '../baseCoin/errors';
-import { KeyPair } from './keyPair';
-import { Fee, SignatureParts, TxData } from './iface';
+} from '../../baseCoin/errors';
+import { KeyPair } from '../keyPair';
+import { Fee, SignatureParts, TxData } from '../iface';
 import {
   getContractData,
   isValidEthAddress,
   getAddressInitializationData,
   calculateForwarderAddress,
   hasSignature,
-} from './utils';
-
-const DEFAULT_M = 3;
+} from '../utils';
 
 /**
  * Ethereum transaction builder.
@@ -38,9 +36,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   // the signature on the external ETH transaction
   private _txSignature: SignatureParts;
 
-  // Wallet initialization transaction parameters
-  private _walletOwnerAddresses: string[];
-
   // Send and AddressInitialization transaction specific parameters
   private _transfer: TransferBuilder;
   private _contractAddress: string;
@@ -55,7 +50,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
     super(_coinConfig);
     this._type = TransactionType.Send;
     this._counter = 0;
-    this._walletOwnerAddresses = [];
     this.transaction = new Transaction(this._coinConfig);
   }
 
@@ -121,12 +115,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
       this.source(transactionJson.from);
     }
     switch (decodedType) {
-      case TransactionType.WalletInitialization:
-        const owners = Utils.decodeWalletCreationData(transactionJson.data);
-        owners.forEach(element => {
-          this.owner(element);
-        });
-        break;
       case TransactionType.Send:
         if (transactionJson.to === undefined) {
           throw new BuildTransactionError('Undefined recipient address');
@@ -143,9 +131,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   /**@inheritdoc */
   protected signImplementation(key: BaseKey): BaseTransaction {
     const signer = new KeyPair({ prv: key.key });
-    if (this._type === TransactionType.WalletInitialization && this._walletOwnerAddresses.length === 0) {
-      throw new SigningError('Cannot sign an wallet initialization transaction without owners');
-    }
     if (this._sourceKeyPair) {
       throw new SigningError('Cannot sign multiple times a non send-type transaction');
     }
@@ -217,19 +202,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   validateTransaction(transaction: BaseTransaction): void {
     this.validateBaseTransactionFields();
     switch (this._type) {
-      case TransactionType.WalletInitialization:
-        // assume sanitization happened in the builder function, just check that all required fields are set
-        if (this._walletOwnerAddresses === undefined) {
-          throw new BuildTransactionError('Invalid transaction: missing wallet owners');
-        }
-
-        if (this._walletOwnerAddresses.length !== 3) {
-          throw new BuildTransactionError(
-            `Invalid transaction: wrong number of owners -- required: 3, ` +
-              `found: ${this._walletOwnerAddresses.length}`,
-          );
-        }
-        break;
       case TransactionType.Send:
         if (this._contractAddress === undefined) {
           throw new BuildTransactionError('Invalid transaction: missing contract address');
@@ -314,7 +286,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
     this._sourceAddress = source;
   }
 
-  private buildBase(data: string): TxData {
+  protected buildBase(data: string): TxData {
     return {
       gasLimit: this._fee.gasLimit,
       gasPrice: this._fee.fee,
@@ -325,38 +297,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
     };
   }
   // endregion
-
-  // region WalletInitialization builder methods
-  /**
-   * Set one of the owners of the multisig wallet.
-   *
-   * @param {string} address An Ethereum address
-   */
-  owner(address: string): void {
-    if (this._type !== TransactionType.WalletInitialization) {
-      throw new BuildTransactionError('Multisig wallet owner can only be set for initialization transactions');
-    }
-    if (this._walletOwnerAddresses.length >= DEFAULT_M) {
-      throw new BuildTransactionError('A maximum of ' + DEFAULT_M + ' owners can be set for a multisig wallet');
-    }
-    if (!isValidEthAddress(address)) {
-      throw new BuildTransactionError('Invalid address: ' + address);
-    }
-    if (this._walletOwnerAddresses.includes(address)) {
-      throw new BuildTransactionError('Repeated owner address: ' + address);
-    }
-    this._walletOwnerAddresses.push(address);
-  }
-
-  /**
-   * Build a transaction for a generic multisig contract.
-   *
-   * @returns {TxData} The Ethereum transaction data
-   */
-  private buildWalletInitializationTransaction(): TxData {
-    return this.buildBase(getContractData(this._walletOwnerAddresses));
-  }
-  //endregion
 
   // region Send builder methods
 
