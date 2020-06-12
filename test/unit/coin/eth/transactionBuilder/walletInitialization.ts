@@ -1,8 +1,9 @@
+import { coins } from '@bitgo/statics';
 import should from 'should';
-import { TransactionType } from '../../../../../src/coin/baseCoin';
-import { getBuilder, Eth } from '../../../../../src';
+import { BaseTransaction, TransactionType } from '../../../../../src/coin/baseCoin';
+import { Eth, getBuilder } from '../../../../../src';
 import * as testData from '../../../../resources/eth/eth';
-import { Transaction } from '../../../../../src/coin/eth';
+import { TransactionBuilderFactory, WalletInitializationBuilder } from '../../../../../src/coin/eth';
 import { Fee } from '../../../../../src/coin/eth/iface';
 
 describe('Eth Transaction builder wallet initialization', function() {
@@ -22,56 +23,48 @@ describe('Eth Transaction builder wallet initialization', function() {
     counter?: number;
     source?: string;
     owners?: string[];
-    type?: TransactionType;
   }
 
-  const buildTransaction = async function(details: WalletCreationDetails): Promise<Transaction> {
-    const txBuilder: any = getBuilder('eth');
-    if (details.type !== undefined) {
-      txBuilder.type(details.type);
-    }
+  const factory = new TransactionBuilderFactory(coins.get('eth'));
+  const buildTransaction = async function(details: WalletCreationDetails): Promise<BaseTransaction> {
+    const txBuilder = factory.type(TransactionType.WalletInitialization);
     if (details.fee !== undefined) {
       txBuilder.fee(details.fee);
     }
-
     if (details.chainId !== undefined) {
       txBuilder.chainId(details.chainId);
     }
-
     if (details.source !== undefined) {
       txBuilder.source(details.source);
     }
-
     if (details.counter !== undefined) {
       txBuilder.counter(details.counter);
     }
-
     if (details.owners !== undefined) {
       for (const owner of details.owners) {
         txBuilder.owner(owner);
       }
     }
-
     return await txBuilder.build();
+  };
+  const getTxBuilder = (): WalletInitializationBuilder => {
+    const txBuilder = factory.type(TransactionType.WalletInitialization);
+    txBuilder.fee({
+      fee: '10',
+      gasLimit: '1000',
+    });
+    txBuilder.chainId(42);
+    txBuilder.source(new Eth.KeyPair({ prv: sourcePrv }).getAddress());
+    txBuilder.counter(1);
+    txBuilder.owner(new Eth.KeyPair({ prv: sourcePrv }).getAddress());
+    txBuilder.owner(new Eth.KeyPair({ pub: pub1 }).getAddress());
+    txBuilder.owner(new Eth.KeyPair({ pub: pub2 }).getAddress());
+    return txBuilder;
   };
 
   describe('should build', () => {
     it('a wallet initialization transaction', async () => {
-      const tx = await buildTransaction({
-        type: TransactionType.WalletInitialization,
-        fee: {
-          fee: '10',
-          gasLimit: '1000',
-        },
-        chainId: 42,
-        source: new Eth.KeyPair({ prv: sourcePrv }).getAddress(),
-        owners: [
-          new Eth.KeyPair({ prv: sourcePrv }).getAddress(),
-          new Eth.KeyPair({ pub: pub1 }).getAddress(),
-          new Eth.KeyPair({ pub: pub2 }).getAddress(),
-        ],
-        counter: 1,
-      });
+      const tx = await getTxBuilder().build();
 
       tx.type.should.equal(TransactionType.WalletInitialization);
       const txJson = tx.toJson();
@@ -82,21 +75,9 @@ describe('Eth Transaction builder wallet initialization', function() {
     });
 
     it('a wallet initialization transaction with nonce 0', async () => {
-      const tx = await buildTransaction({
-        type: TransactionType.WalletInitialization,
-        fee: {
-          fee: '10',
-          gasLimit: '1000',
-        },
-        chainId: 42,
-        source: new Eth.KeyPair({ prv: sourcePrv }).getAddress(),
-        owners: [
-          new Eth.KeyPair({ prv: sourcePrv }).getAddress(),
-          new Eth.KeyPair({ pub: pub1 }).getAddress(),
-          new Eth.KeyPair({ pub: pub2 }).getAddress(),
-        ],
-        counter: 0,
-      });
+      const tx = await getTxBuilder()
+        .counter(0)
+        .build();
 
       tx.type.should.equal(TransactionType.WalletInitialization);
       const txJson = tx.toJson();
@@ -107,8 +88,7 @@ describe('Eth Transaction builder wallet initialization', function() {
     });
 
     it('an unsigned init transaction from serialized with 0-prefixed address', async () => {
-      const txBuilder: any = getBuilder('eth');
-      txBuilder.type(TransactionType.WalletInitialization);
+      const txBuilder = factory.type(TransactionType.WalletInitialization);
       txBuilder.source(defaultKeyPair.getAddress());
       txBuilder.counter(1);
       txBuilder.fee({
@@ -124,7 +104,7 @@ describe('Eth Transaction builder wallet initialization', function() {
       const serialized = tx.toBroadcastFormat();
 
       // now rebuild from the signed serialized tx and make sure it stays the same
-      const newTxBuilder: any = getBuilder('eth');
+      const newTxBuilder = factory.type(TransactionType.WalletInitialization);
       newTxBuilder.from(serialized);
       newTxBuilder.source(defaultKeyPair.getAddress());
       const newTx = await newTxBuilder.build();
@@ -132,8 +112,7 @@ describe('Eth Transaction builder wallet initialization', function() {
     });
 
     it('an unsigned init transaction from serialized', async () => {
-      const txBuilder: any = getBuilder('eth');
-      txBuilder.type(TransactionType.WalletInitialization);
+      const txBuilder = factory.type(TransactionType.WalletInitialization);
       txBuilder.source(defaultKeyPair.getAddress());
       txBuilder.counter(1);
       txBuilder.fee({
@@ -149,7 +128,7 @@ describe('Eth Transaction builder wallet initialization', function() {
       const serialized = tx.toBroadcastFormat();
 
       // now rebuild from the signed serialized tx and make sure it stays the same
-      const newTxBuilder: any = getBuilder('eth');
+      const newTxBuilder = factory.type(TransactionType.WalletInitialization);
       newTxBuilder.from(serialized);
       newTxBuilder.source(defaultKeyPair.getAddress());
       const newTx = await newTxBuilder.build();
@@ -157,8 +136,7 @@ describe('Eth Transaction builder wallet initialization', function() {
     });
 
     it('a signed init transaction from serialized', async () => {
-      const txBuilder: any = getBuilder('eth');
-      txBuilder.type(TransactionType.WalletInitialization);
+      const txBuilder = factory.type(TransactionType.WalletInitialization);
       txBuilder.source(defaultKeyPair.getAddress());
       txBuilder.counter(1);
       txBuilder.fee({
@@ -175,9 +153,8 @@ describe('Eth Transaction builder wallet initialization', function() {
       const serialized = tx.toBroadcastFormat();
 
       // now rebuild from the signed serialized tx and make sure it stays the same
-      const newTxBuilder: any = getBuilder('eth');
+      const newTxBuilder = factory.type(TransactionType.WalletInitialization);
       newTxBuilder.from(serialized);
-      newTxBuilder.source(defaultKeyPair.getAddress());
       const newTx = await newTxBuilder.build();
       should.equal(newTx.toBroadcastFormat(), serialized);
       should.equal(newTx.id, '0xc65f9802df3b559b297779ec06d3e71ba7f5b1b47cc961ad2efba54d82347bec');
@@ -190,19 +167,6 @@ describe('Eth Transaction builder wallet initialization', function() {
   });
 
   describe('should fail to build', () => {
-    it('an unsupported type of transaction', async () => {
-      await buildTransaction({
-        type: TransactionType.AccountUpdate,
-        fee: {
-          fee: '10',
-          gasLimit: '10',
-        },
-        chainId: 42,
-        source: new Eth.KeyPair({ prv: sourcePrv }).getAddress(),
-        counter: 0,
-      }).should.be.rejectedWith('Unsupported transaction type');
-    });
-
     it('a transaction without fee', async () => {
       await buildTransaction({
         chainId: 42,
@@ -235,7 +199,6 @@ describe('Eth Transaction builder wallet initialization', function() {
 
     it('a wallet initialization the wrong number of owners', async () => {
       await buildTransaction({
-        type: TransactionType.WalletInitialization,
         fee: {
           fee: '10',
           gasLimit: '10',
@@ -247,7 +210,6 @@ describe('Eth Transaction builder wallet initialization', function() {
       }).should.be.rejectedWith('Invalid transaction: wrong number of owners -- required: 3, found: 2');
 
       await buildTransaction({
-        type: TransactionType.WalletInitialization,
         fee: {
           fee: '10',
           gasLimit: '10',
@@ -264,7 +226,6 @@ describe('Eth Transaction builder wallet initialization', function() {
       }).should.be.rejectedWith('Repeated owner address: ' + new Eth.KeyPair({ pub: pub1 }).getAddress());
 
       await buildTransaction({
-        type: TransactionType.WalletInitialization,
         fee: {
           fee: '10',
           gasLimit: '10',
@@ -296,8 +257,7 @@ describe('Eth Transaction builder wallet initialization', function() {
 
   describe('should fail to sign', () => {
     it('a wallet initialization transaction without owners', () => {
-      const txBuilder: any = getBuilder('eth');
-      txBuilder.type(TransactionType.WalletInitialization);
+      const txBuilder = factory.type(TransactionType.WalletInitialization);
       txBuilder.fee({
         fee: '10',
         gasLimit: '1000',
@@ -313,8 +273,7 @@ describe('Eth Transaction builder wallet initialization', function() {
     });
 
     it('a signed wallet initialization transaction', () => {
-      const txBuilder: any = getBuilder('eth');
-      txBuilder.type(TransactionType.WalletInitialization);
+      const txBuilder = factory.type(TransactionType.WalletInitialization);
       txBuilder.fee({
         fee: '10',
         gasLimit: '1000',
@@ -361,7 +320,7 @@ describe('Eth Transaction builder wallet initialization', function() {
     });
 
     it('a raw transaction', async () => {
-      const builder: any = getBuilder('eth');
+      const builder: any = factory.type(TransactionType.WalletInitialization);
       should.doesNotThrow(() => builder.from(testData.TX_BROADCAST));
       should.doesNotThrow(() => builder.from(testData.TX_JSON));
       should.throws(() => builder.from('0x00001000'), 'There was error in decoding the hex string');
@@ -371,9 +330,8 @@ describe('Eth Transaction builder wallet initialization', function() {
     });
 
     it('a transaction to build', async () => {
-      const txBuilder: any = getBuilder('eth');
+      const txBuilder: any = factory.type(TransactionType.WalletInitialization);
       txBuilder.counter(undefined);
-      txBuilder.type(TransactionType.WalletInitialization);
       should.throws(() => txBuilder.validateTransaction(), 'Invalid transaction: missing fee');
       txBuilder.fee({
         fee: '10',
@@ -400,19 +358,8 @@ describe('Eth Transaction builder wallet initialization', function() {
   });
 
   describe('set owner', () => {
-    it('should be wallet initializaion', () => {
-      const txBuilder: any = getBuilder('eth');
-      txBuilder.type(TransactionType.Send);
-      const sourceKeyPair = new Eth.KeyPair({ prv: sourcePrv });
-      should.throws(
-        () => txBuilder.owner(sourceKeyPair.getAddress()),
-        'Multisig wallet owner can only be set for initialization transactions',
-      );
-    });
-
     it('should be only 3 owners', () => {
-      const txBuilder: any = getBuilder('eth');
-      txBuilder.type(TransactionType.WalletInitialization);
+      const txBuilder = factory.type(TransactionType.WalletInitialization);
       txBuilder.fee({
         fee: '10',
         gasLimit: '1000',

@@ -1,17 +1,19 @@
+import { coins } from '@bitgo/statics';
 import should from 'should';
 import { TransactionType } from '../../../../src/coin/baseCoin';
 import { getBuilder, Eth, Etc } from '../../../../src';
 import * as testData from '../../../resources/etc/etc';
+import { TransactionBuilderFactory } from '../../../../src/coin/eth';
 
 describe('Etc Transaction builder', function() {
   const defaultKeyPair = new Eth.KeyPair({
     prv: '3D527F1CB33BB3DECB06F982AABB51B60D8B91209684E1B0938716BAEDC1A2A0',
   });
+  const factory = new TransactionBuilderFactory(coins.get('etc'));
 
   describe('should sign', () => {
     it('an init transaction', async () => {
-      const txBuilder = getBuilder('etc') as Etc.TransactionBuilder;
-      txBuilder.type(TransactionType.WalletInitialization);
+      const txBuilder = factory.type(TransactionType.WalletInitialization);
       txBuilder.fee({
         fee: '10000000000',
         gasLimit: '6800000',

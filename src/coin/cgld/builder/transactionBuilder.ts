@@ -1,11 +1,11 @@
 import { BaseCoin as CoinConfig } from '@bitgo/statics/dist/src/base';
-import { Eth } from '../../index';
-import { TransactionType, StakingOperationTypes } from '../baseCoin';
-import { BuildTransactionError } from '../baseCoin/errors';
-import { TxData } from '../eth/iface';
-import { Transaction } from './transaction';
-import { StakingBuilder } from './stakingBuilder';
-import { StakingCall } from './stakingCall';
+import { Eth } from '../../../index';
+import { TransactionType, StakingOperationTypes } from '../../baseCoin';
+import { BuildTransactionError } from '../../baseCoin/errors';
+import { TxData } from '../../eth/iface';
+import { Transaction } from '../transaction';
+import { StakingBuilder } from '../stakingBuilder';
+import { StakingCall } from '../stakingCall';
 
 export class TransactionBuilder extends Eth.TransactionBuilder {
   // Staking specific parameters
@@ -13,6 +13,7 @@ export class TransactionBuilder extends Eth.TransactionBuilder {
 
   constructor(_coinConfig: Readonly<CoinConfig>) {
     super(_coinConfig);
+    this._transactionClass = Transaction;
     this.transaction = new Transaction(this._coinConfig);
   }
 

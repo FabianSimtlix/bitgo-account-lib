@@ -25,6 +25,7 @@ import {
  * Ethereum transaction builder.
  */
 export class TransactionBuilder extends BaseTransactionBuilder {
+  protected _transactionClass = Transaction;
   protected _type: TransactionType;
   private _transaction: Transaction;
   private _sourceKeyPair: KeyPair;
@@ -50,7 +51,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
     super(_coinConfig);
     this._type = TransactionType.Send;
     this._counter = 0;
-    this.transaction = new Transaction(this._coinConfig);
+    this.transaction = new this._transactionClass(this._coinConfig);
   }
 
   /** @inheritdoc */
@@ -73,8 +74,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
 
   protected getTransactionData(): TxData {
     switch (this._type) {
-      case TransactionType.WalletInitialization:
-        return this.buildWalletInitializationTransaction();
       case TransactionType.Send:
         return this.buildSendTransaction();
       case TransactionType.AddressInitialization:
@@ -88,11 +87,11 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   protected fromImplementation(rawTransaction: string): Transaction {
     let tx: Transaction;
     if (/^0x?[0-9a-f]{1,}$/.test(rawTransaction.toLowerCase())) {
-      tx = Transaction.fromSerialized(this._coinConfig, rawTransaction);
+      tx = this._transactionClass.fromSerialized(this._coinConfig, rawTransaction);
       this.loadBuilderInput(tx.toJson());
     } else {
       const txData = JSON.parse(rawTransaction);
-      tx = new Transaction(this._coinConfig, txData);
+      tx = new this._transactionClass(this._coinConfig, txData);
     }
     return tx;
   }
@@ -273,12 +272,13 @@ export class TransactionBuilder extends BaseTransactionBuilder {
    *
    * @param {number} counter The counter to use
    */
-  counter(counter: number): void {
+  counter(counter: number): this {
     if (counter < 0) {
       throw new BuildTransactionError(`Invalid counter: ${counter}`);
     }
 
     this._counter = counter;
+    return this;
   }
 
   /**
