@@ -1,15 +1,18 @@
 import should from 'should';
 import { coins } from '@bitgo/statics';
-import { Cgld, getBuilder } from '../../../../../src';
 import { StakingOperationTypes, TransactionType } from '../../../../../src/coin/baseCoin';
 import * as testData from '../../../../resources/cgld/cgld';
 import { getOperationConfig } from '../../../../../src/coin/cgld/stakingUtils';
+import { TransactionBuilderFactory } from '../../../../../src/coin/cgld/builder/transactionBuilderFactory';
 
 describe('Celo staking transaction builder', () => {
   let txBuilder;
-  beforeEach(() => {
-    txBuilder = getBuilder('tcgld') as Cgld.TransactionBuilder;
-    txBuilder.type(TransactionType.StakingLock);
+  const factory = new TransactionBuilderFactory(coins.get('tcgld'));
+  /**
+   * @param type
+   */
+  function initBuilder(type: TransactionType) {
+    txBuilder = factory.type(type);
     txBuilder.fee({
       fee: '1000000000',
       gasLimit: '12100000',
@@ -17,13 +20,14 @@ describe('Celo staking transaction builder', () => {
     txBuilder.chainId(44786);
     txBuilder.source(testData.KEYPAIR_PRV.getAddress());
     txBuilder.counter(1);
-  });
+  }
 
   const coin = coins.get('tcgld');
   const LockOperation = getOperationConfig(StakingOperationTypes.LOCK, coin.network.type);
   const VoteOperation = getOperationConfig(StakingOperationTypes.VOTE, coin.network.type);
 
   it('should build a lock transaction', async function() {
+    initBuilder(TransactionType.StakingLock);
     txBuilder
       .lock()
       .type(StakingOperationTypes.LOCK)
@@ -34,7 +38,7 @@ describe('Celo staking transaction builder', () => {
   });
 
   it('should build a vote transaction', async function() {
-    txBuilder.type(TransactionType.StakingVote);
+    initBuilder(TransactionType.StakingVote);
     txBuilder
       .vote()
       .for('0x34084d6a4df32d9ad7395f4baad0db55c9c38145')
@@ -48,7 +52,7 @@ describe('Celo staking transaction builder', () => {
   });
 
   it('should sign and build a lock transaction from serialized', async function() {
-    const builder = getBuilder('tcgld') as Cgld.TransactionBuilder;
+    const builder = factory.type(TransactionType.StakingLock);
     builder.from('0xed01843b9aca0083b8a1a08080809494c3e6675015d8479b648657e7ddfcd938489d0d6484f83d08ba82aef28080');
     builder.source(testData.KEYPAIR_PRV.getAddress());
     builder.sign({ key: testData.PRIVATE_KEY });
@@ -61,7 +65,7 @@ describe('Celo staking transaction builder', () => {
   });
 
   it('should sign and build a vote transaction from serialized', async function() {
-    const builder = getBuilder('tcgld') as Cgld.TransactionBuilder;
+    const builder = factory.type(TransactionType.StakingVote);
     builder.from(testData.VOTE_BROADCAST_TX);
     builder.source(testData.KEYPAIR_PRV.getAddress());
     builder.sign({ key: testData.PRIVATE_KEY });
@@ -73,19 +77,8 @@ describe('Celo staking transaction builder', () => {
     should.equal(tx.toBroadcastFormat(), testData.VOTE_BROADCAST_TX);
   });
 
-  it('should fail to call lock if it is not an staking lock type transaction', () => {
-    txBuilder.type(TransactionType.AddressInitialization);
-    should.throws(
-      () => {
-        txBuilder.lock();
-      },
-      e => {
-        return e.message === 'Lock can only be set for Staking Lock transactions type';
-      },
-    );
-  });
-
   it('should fail to build and staking lock operation if operationBuilder is not set', async () => {
+    initBuilder(TransactionType.StakingLock);
     await txBuilder.build().should.be.rejectedWith('No staking information set');
   });
 });

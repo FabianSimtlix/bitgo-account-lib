@@ -12,21 +12,15 @@ import {
   SigningError,
 } from '../../baseCoin/errors';
 import { KeyPair } from '../keyPair';
-import { Fee, SignatureParts, TxData } from '../iface';
-import {
-  getContractData,
-  isValidEthAddress,
-  getAddressInitializationData,
-  calculateForwarderAddress,
-  hasSignature,
-} from '../utils';
+import { Fee, SignatureParts, TransactionClass, TxData } from '../iface';
+import { isValidEthAddress, getAddressInitializationData, calculateForwarderAddress, hasSignature } from '../utils';
 
 /**
  * Ethereum transaction builder.
  */
 export class TransactionBuilder extends BaseTransactionBuilder {
-  protected _transactionClass = Transaction;
   protected _type: TransactionType;
+  private readonly _transactionClass;
   private _transaction: Transaction;
   private _sourceKeyPair: KeyPair;
   private _chainId: number;
@@ -46,12 +40,14 @@ export class TransactionBuilder extends BaseTransactionBuilder {
    * Public constructor.
    *
    * @param _coinConfig
+   * @param transactionImplementation
    */
-  constructor(_coinConfig: Readonly<CoinConfig>) {
+  constructor(_coinConfig: Readonly<CoinConfig>, transactionImplementation: TransactionClass = Transaction) {
     super(_coinConfig);
     this._type = TransactionType.Send;
+    this._transactionClass = transactionImplementation;
     this._counter = 0;
-    this.transaction = new this._transactionClass(this._coinConfig);
+    this.transaction = new transactionImplementation(this._coinConfig);
   }
 
   /** @inheritdoc */
@@ -218,9 +214,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
         if (this._contractCounter === undefined) {
           throw new BuildTransactionError('Invalid transaction: missing contract counter');
         }
-        break;
-      case TransactionType.StakingLock:
-      case TransactionType.StakingVote:
         break;
       default:
         throw new BuildTransactionError('Unsupported transaction type');

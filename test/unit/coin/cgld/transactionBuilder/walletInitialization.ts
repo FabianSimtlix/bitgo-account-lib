@@ -3,7 +3,7 @@ import should from 'should';
 import { TransactionType } from '../../../../../src/coin/baseCoin/';
 import * as testData from '../../../../resources/cgld/cgld';
 import { TransactionBuilderFactory } from '../../../../../src/coin/cgld/builder/transactionBuilderFactory';
-import { WalletInitializationBuilder } from '../../../../../src/coin/cgld/builder/walletInitializationBuilder';
+import { WalletInitializationBuilder } from '../../../../../src/coin/eth';
 
 describe('Celo Transaction builder for wallet initialization', () => {
   const factory = new TransactionBuilderFactory(coins.get('cgld'));

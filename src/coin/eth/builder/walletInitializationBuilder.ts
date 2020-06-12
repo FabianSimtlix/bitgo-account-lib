@@ -2,7 +2,7 @@ import { BaseCoin as CoinConfig } from '@bitgo/statics/dist/src/base';
 import { BaseKey } from '../../baseCoin/iface';
 import { BaseTransaction, TransactionType } from '../../baseCoin';
 import { BuildTransactionError, SigningError } from '../../baseCoin/errors';
-import { TxData } from '../iface';
+import { TransactionClass, TxData } from '../iface';
 import { Utils } from '../index';
 import { getContractData, isValidEthAddress } from '../utils';
 import { TransactionBuilder } from './transactionBuilder';
@@ -11,8 +11,8 @@ const DEFAULT_M = 3;
 export class WalletInitializationBuilder extends TransactionBuilder {
   private _walletOwnerAddresses: string[];
 
-  constructor(_coinConfig: Readonly<CoinConfig>) {
-    super(_coinConfig);
+  constructor(_coinConfig: Readonly<CoinConfig>, transactionImplementation: TransactionClass) {
+    super(_coinConfig, transactionImplementation);
     this._walletOwnerAddresses = [];
     this._type = TransactionType.WalletInitialization;
   }

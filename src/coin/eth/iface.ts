@@ -1,5 +1,8 @@
+import { BaseCoin as CoinConfig } from '@bitgo/statics/dist/src/base';
 import { BaseFee } from '../baseCoin/iface';
+import { BaseTransaction } from '../baseCoin';
 import { KeyPair } from './keyPair';
+import { Transaction } from './transaction';
 
 export interface Fee extends BaseFee {
   gasLimit: string;
@@ -72,4 +75,8 @@ export interface ContractMethodConfig {
   contractAddress: string;
   methodId: string;
   types: string[];
+}
+
+export interface TransactionClass {
+  new (_coinConfig: Readonly<CoinConfig>): Transaction;
 }

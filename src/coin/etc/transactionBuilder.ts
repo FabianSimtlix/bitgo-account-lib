@@ -4,7 +4,6 @@ import { Transaction } from './';
 
 export class TransactionBuilder extends Eth.TransactionBuilder {
   constructor(_coinConfig: Readonly<CoinConfig>) {
-    super(_coinConfig);
-    this.transaction = new Transaction(this._coinConfig);
+    super(_coinConfig, Transaction);
   }
 }
