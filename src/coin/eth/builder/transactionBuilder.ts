@@ -4,7 +4,7 @@ import { RLP } from 'ethers/utils';
 import * as Crypto from '../../../utils/crypto';
 import { BaseTransaction, BaseTransactionBuilder, TransactionType } from '../../baseCoin';
 import { BaseAddress, BaseKey } from '../../baseCoin/iface';
-import { Transaction, TransferBuilder, Utils } from '../index';
+import { Transaction, Utils } from '../index';
 import {
   BuildTransactionError,
   InvalidTransactionError,
@@ -13,7 +13,7 @@ import {
 } from '../../baseCoin/errors';
 import { KeyPair } from '../keyPair';
 import { Fee, SignatureParts, TransactionClass, TxData } from '../iface';
-import { isValidEthAddress, getAddressInitializationData, calculateForwarderAddress, hasSignature } from '../utils';
+import { isValidEthAddress, hasSignature } from '../utils';
 
 /**
  * Ethereum transaction builder.
@@ -31,11 +31,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   // the signature on the external ETH transaction
   private _txSignature: SignatureParts;
 
-  // Send and AddressInitialization transaction specific parameters
-  private _transfer: TransferBuilder;
-  private _contractAddress: string;
-  private _contractCounter: number;
-
   /**
    * Public constructor.
    *
@@ -44,7 +39,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
    */
   constructor(_coinConfig: Readonly<CoinConfig>, transactionImplementation: TransactionClass = Transaction) {
     super(_coinConfig);
-    this._type = TransactionType.Send;
     this._transactionClass = transactionImplementation;
     this._counter = 0;
     this.transaction = new transactionImplementation(this._coinConfig);
@@ -69,14 +63,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   }
 
   protected getTransactionData(): TxData {
-    switch (this._type) {
-      case TransactionType.Send:
-        return this.buildSendTransaction();
-      case TransactionType.AddressInitialization:
-        return this.buildAddressInitializationTransaction();
-      default:
-        throw new BuildTransactionError('Unsupported transaction type');
-    }
+    throw new BuildTransactionError('Unsupported transaction type');
   }
 
   /** @inheritdoc */
@@ -99,7 +86,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
    */
   protected loadBuilderInput(transactionJson: TxData): void {
     const decodedType = Utils.classifyTransaction(transactionJson.data);
-    this.type(decodedType);
     this.fee({ fee: transactionJson.gasPrice, gasLimit: transactionJson.gasLimit });
     this.counter(transactionJson.nonce);
     this.chainId(Number(transactionJson.chainId));
@@ -113,18 +99,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   }
 
   protected setTransactionTypeFields(decodedType: TransactionType, transactionJson: TxData): void {
-    switch (decodedType) {
-      case TransactionType.Send:
-        if (transactionJson.to === undefined) {
-          throw new BuildTransactionError('Undefined recipient address');
-        }
-        this._contractAddress = transactionJson.to;
-        this._transfer = new TransferBuilder(transactionJson.data);
-        break;
-      default:
-        throw new BuildTransactionError('Unsupported transaction type');
-      //TODO: Add other cases of deserialization
-    }
+    throw new BuildTransactionError('Unsupported transaction type');
   }
 
   /**@inheritdoc */
@@ -199,25 +174,7 @@ export class TransactionBuilder extends BaseTransactionBuilder {
 
   /**@inheritdoc */
   validateTransaction(transaction: BaseTransaction): void {
-    this.validateBaseTransactionFields();
-    switch (this._type) {
-      case TransactionType.Send:
-        if (this._contractAddress === undefined) {
-          throw new BuildTransactionError('Invalid transaction: missing contract address');
-        }
-        break;
-      case TransactionType.AddressInitialization:
-        if (this._contractAddress === undefined) {
-          throw new BuildTransactionError('Invalid transaction: missing contract address');
-        }
-
-        if (this._contractCounter === undefined) {
-          throw new BuildTransactionError('Invalid transaction: missing contract counter');
-        }
-        break;
-      default:
-        throw new BuildTransactionError('Unsupported transaction type');
-    }
+    throw new BuildTransactionError('Unsupported transaction type');
   }
 
   validateValue(value: BigNumber): void {
@@ -236,15 +193,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
   chainId(chainId: number): void {
     this._chainId = chainId;
     // TODO: Infer it from coinConfig
-  }
-
-  /**
-   * The type of transaction being built.
-   *
-   * @param {TransactionType} type
-   */
-  type(type: TransactionType): void {
-    this._type = type;
   }
 
   /**
@@ -296,78 +244,6 @@ export class TransactionBuilder extends BaseTransactionBuilder {
       value: '0',
     };
   }
-  // endregion
-
-  // region Send builder methods
-
-  contract(address: string): void {
-    if (isValidEthAddress(address)) this._contractAddress = address;
-    else throw new BuildTransactionError('Invalid address: ' + address);
-  }
-
-  /**
-   * Gets the transfer funds builder if exist, or creates a new one for this transaction and returns it
-   *
-   * @returns {TransferBuilder} the transfer builder
-   */
-  transfer(): TransferBuilder {
-    if (this._type !== TransactionType.Send) {
-      throw new BuildTransactionError('Transfers can only be set for send transactions');
-    }
-    if (!this._transfer) {
-      this._transfer = new TransferBuilder();
-    }
-    return this._transfer;
-  }
-
-  /**
-   * Returns the serialized sendMultiSig contract method data
-   *
-   * @returns {string} serialized sendMultiSig data
-   */
-  private getSendData(): string {
-    if (!this._transfer) {
-      throw new BuildTransactionError('Missing transfer information');
-    }
-    return this._transfer.signAndBuild();
-  }
-
-  private buildSendTransaction(): TxData {
-    const sendData = this.getSendData();
-    const tx: TxData = this.buildBase(sendData);
-    tx.to = this._contractAddress;
-    return tx;
-  }
-  //endregion
-
-  // region AddressInitialization builder methods
-
-  /**
-   * Set the contract transaction nonce to calculate the forwarder address.
-   *
-   * @param {number} contractCounter The counter to use
-   */
-  contractCounter(contractCounter: number): void {
-    if (contractCounter < 0) {
-      throw new BuildTransactionError(`Invalid contract counter: ${contractCounter}`);
-    }
-
-    this._contractCounter = contractCounter;
-  }
-
-  /**
-   * Build a transaction to create a forwarder.
-   *
-   * @returns {TxData} The Ethereum transaction data
-   */
-  private buildAddressInitializationTransaction(): TxData {
-    const addressInitData = getAddressInitializationData();
-    const tx: TxData = this.buildBase(addressInitData);
-    tx.to = this._contractAddress;
-    tx.deployedAddress = calculateForwarderAddress(this._contractAddress, this._contractCounter);
-    return tx;
-  }
-  //endregion
 
   /** @inheritdoc */
   protected get transaction(): Transaction {

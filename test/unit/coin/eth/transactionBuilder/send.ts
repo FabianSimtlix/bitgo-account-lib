@@ -1,15 +1,16 @@
 import should from 'should';
 import { coins } from '@bitgo/statics';
 import { TransactionType } from '../../../../../src/coin/baseCoin';
-import { getBuilder, Eth } from '../../../../../src';
+import { Eth } from '../../../../../src';
 import * as testData from '../../../../resources/eth/eth';
+import { TransactionBuilderFactory } from '../../../../../src/coin/eth';
 
 describe('Eth transaction builder send', () => {
+  const factory = new TransactionBuilderFactory(coins.get('eth'));
   it('should validate a send type transaction', () => {
-    const txBuilder = getBuilder('eth') as Eth.TransactionBuilder;
+    const txBuilder = factory.type(TransactionType.Send);
     const tx = new Eth.Transaction(coins.get('eth'));
     txBuilder.counter(1);
-    txBuilder.type(TransactionType.Send);
     should.throws(() => txBuilder.validateTransaction(tx), 'Invalid transaction: missing fee');
     txBuilder.fee({
       fee: '10',
@@ -24,7 +25,7 @@ describe('Eth transaction builder send', () => {
 
   describe('should sign and build', () => {
     it('a send found transaction', async () => {
-      const txBuilder = getBuilder('cgld') as Eth.TransactionBuilder;
+      const txBuilder = factory.type(TransactionType.Send);
       const key = testData.KEYPAIR_PRV.getKeys().prv as string;
       txBuilder.fee({
         fee: '1000000000',
@@ -33,7 +34,6 @@ describe('Eth transaction builder send', () => {
       txBuilder.chainId(42);
       txBuilder.source(testData.KEYPAIR_PRV.getAddress());
       txBuilder.counter(2);
-      txBuilder.type(TransactionType.Send);
       txBuilder.contract('0x8f977e912ef500548a0c3be6ddde9899f1199b81');
       txBuilder
         .transfer()
@@ -48,7 +48,7 @@ describe('Eth transaction builder send', () => {
     });
 
     it('a send found transaction from serialized', async () => {
-      const txBuilder = getBuilder('cgld') as Eth.TransactionBuilder;
+      const txBuilder = factory.type(TransactionType.Send);
       txBuilder.from(testData.SEND_TX_BROADCAST);
       const signedTx = await txBuilder.build();
       should.equal(signedTx.toBroadcastFormat(), testData.SEND_TX_BROADCAST);

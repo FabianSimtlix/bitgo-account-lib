@@ -378,8 +378,7 @@ describe('Eth Transaction builder wallet initialization', function() {
     });
 
     it('should be a valid address', () => {
-      const txBuilder: any = getBuilder('eth');
-      txBuilder.type(TransactionType.WalletInitialization);
+      const txBuilder = factory.type(TransactionType.WalletInitialization);
       txBuilder.fee({
         fee: '10',
         gasLimit: '1000',

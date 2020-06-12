@@ -14,15 +14,9 @@ class StakingTransactionBuilder extends Eth.TransactionBuilder {
     super(_coinConfig, Transaction);
   }
 
-  /** @inheritdoc */
-  type(type: TransactionType): void {
-    super.type(type);
-    this._stakingBuilder = undefined;
-  }
-
   /** @inheritDoc */
   validateTransaction(transaction: BaseTransaction) {
-    super.validateBaseTransactionFields();
+    this.validateBaseTransactionFields();
   }
 
   protected getStaking(): StakingCall {
@@ -34,6 +28,11 @@ class StakingTransactionBuilder extends Eth.TransactionBuilder {
 }
 
 export class StakingLockBuilder extends StakingTransactionBuilder {
+  constructor(coinConfig: Readonly<CoinConfig>) {
+    super(coinConfig);
+    this._type = TransactionType.StakingLock;
+  }
+
   /** @inheritDoc */
   protected setTransactionTypeFields(decodedType: TransactionType, transactionJson: TxData): void {
     this._stakingBuilder = new StakingBuilder(this._coinConfig)
@@ -58,6 +57,11 @@ export class StakingLockBuilder extends StakingTransactionBuilder {
 }
 
 export class StakingVoteBuilder extends StakingTransactionBuilder {
+  constructor(coinConfig: Readonly<CoinConfig>) {
+    super(coinConfig);
+    this._type = TransactionType.StakingVote;
+  }
+
   /** @inheritDoc */
   protected setTransactionTypeFields(decodedType: TransactionType, transactionJson: TxData): void {
     this._stakingBuilder = new StakingBuilder(this._coinConfig, transactionJson.data);

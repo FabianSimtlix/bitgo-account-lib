@@ -27,7 +27,7 @@ export class WalletInitializationBuilder extends TransactionBuilder {
 
   /** @inheritDoc */
   validateTransaction(transaction: BaseTransaction) {
-    super.validateBaseTransactionFields();
+    this.validateBaseTransactionFields();
     if (this._walletOwnerAddresses === undefined) {
       throw new BuildTransactionError('Invalid transaction: missing wallet owners');
     }

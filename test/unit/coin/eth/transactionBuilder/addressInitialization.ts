@@ -1,12 +1,14 @@
 import should from 'should';
+import { coins } from '@bitgo/statics';
 import { TransactionType } from '../../../../../src/coin/baseCoin';
 import { getBuilder, Eth } from '../../../../../src';
 import * as testData from '../../../../resources/eth/eth';
+import { TransactionBuilderFactory } from '../../../../../src/coin/cgld/builder/transactionBuilderFactory';
 
 describe('Eth address initialization', () => {
+  const factory = new TransactionBuilderFactory(coins.get('eth'));
   it('should fail if there is no contract address', async () => {
-    const txBuilder = getBuilder('eth') as Eth.TransactionBuilder;
-    txBuilder.type(TransactionType.AddressInitialization);
+    const txBuilder = factory.type(TransactionType.AddressInitialization);
     txBuilder.fee({
       fee: '10',
       gasLimit: '1000',
@@ -18,8 +20,7 @@ describe('Eth address initialization', () => {
   });
 
   it('should fail if there is no contract counter', async () => {
-    const txBuilder = getBuilder('eth') as Eth.TransactionBuilder;
-    txBuilder.type(TransactionType.AddressInitialization);
+    const txBuilder = factory.type(TransactionType.AddressInitialization);
     txBuilder.fee({
       fee: '10',
       gasLimit: '1000',
@@ -32,8 +33,7 @@ describe('Eth address initialization', () => {
   });
 
   it('should build properly and return a correct address', async () => {
-    const txBuilder = getBuilder('eth') as Eth.TransactionBuilder;
-    txBuilder.type(TransactionType.AddressInitialization);
+    const txBuilder = factory.type(TransactionType.AddressInitialization);
     txBuilder.fee({
       fee: '10',
       gasLimit: '1000',

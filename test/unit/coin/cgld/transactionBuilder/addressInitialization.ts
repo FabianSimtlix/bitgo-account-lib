@@ -1,12 +1,14 @@
+import { coins } from '@bitgo/statics';
 import should from 'should';
 import { TransactionType } from '../../../../../src/coin/baseCoin';
-import { getBuilder, Cgld } from '../../../../../src';
 import * as testData from '../../../../resources/cgld/cgld';
+import { TransactionBuilderFactory } from '../../../../../src/coin/cgld/builder/transactionBuilderFactory';
 
 describe('An address initialization', () => {
+  const factory = new TransactionBuilderFactory(coins.get('cgld'));
   describe('Should sign and build', () => {
     it('an address initialization transaction', async () => {
-      const txBuilder = getBuilder('cgld') as Cgld.TransactionBuilder;
+      const txBuilder = factory.type(TransactionType.AddressInitialization);
       txBuilder.fee({
         fee: '1000000000',
         gasLimit: '12100000',
@@ -14,7 +16,6 @@ describe('An address initialization', () => {
       txBuilder.chainId(44786);
       txBuilder.source(testData.KEYPAIR_PRV.getAddress());
       txBuilder.counter(2);
-      txBuilder.type(TransactionType.AddressInitialization);
       txBuilder.contractCounter(1);
       txBuilder.contract(testData.CONTRACT_ADDRESS);
       txBuilder.sign({ key: testData.KEYPAIR_PRV.getKeys().prv });
@@ -32,8 +33,7 @@ describe('An address initialization', () => {
 
   describe('Should fail to build', () => {
     it('an address initialization transaction without fee', async () => {
-      const txBuilder = getBuilder('cgld') as Cgld.TransactionBuilder;
-      txBuilder.type(TransactionType.AddressInitialization);
+      const txBuilder = factory.type(TransactionType.AddressInitialization);
       txBuilder.chainId(44786);
       txBuilder.source(testData.KEYPAIR_PRV.getAddress());
       txBuilder.counter(1);
@@ -42,8 +42,7 @@ describe('An address initialization', () => {
     });
 
     it('an address initialization transaction without source', async () => {
-      const txBuilder = getBuilder('cgld') as Cgld.TransactionBuilder;
-      txBuilder.type(TransactionType.AddressInitialization);
+      const txBuilder = factory.type(TransactionType.AddressInitialization);
       txBuilder.fee({
         fee: '10000000000',
         gasLimit: '2000000',
@@ -55,8 +54,7 @@ describe('An address initialization', () => {
     });
 
     it('an address initialization transaction without chain id', async () => {
-      const txBuilder = getBuilder('cgld') as Cgld.TransactionBuilder;
-      txBuilder.type(TransactionType.AddressInitialization);
+      const txBuilder = factory.type(TransactionType.AddressInitialization);
       txBuilder.fee({
         fee: '10000000000',
         gasLimit: '2000000',

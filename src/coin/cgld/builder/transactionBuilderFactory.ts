@@ -13,6 +13,8 @@ export class TransactionBuilderFactory extends Eth.TransactionBuilderFactory {
   type(type: TransactionType.StakingLock): StakingLockBuilder;
   type(type: TransactionType.StakingVote): StakingVoteBuilder;
   type(type: TransactionType.WalletInitialization): Eth.WalletInitializationBuilder;
+  type(type: TransactionType.AddressInitialization): Eth.AddressInitializationBuilder;
+  type(type: TransactionType.Send): Eth.SendBuilder;
   type(type: TransactionType): Eth.TransactionBuilder;
   type(type: TransactionType): Eth.TransactionBuilder {
     switch (type) {
