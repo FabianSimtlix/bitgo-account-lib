@@ -1,15 +1,14 @@
 import { coins } from '@bitgo/statics';
 import should from 'should';
-import { TransactionType } from '../../../../src/coin/baseCoin';
-import { getBuilder, Eth, Etc } from '../../../../src';
+import { BaseTransactionBuilderFactory, TransactionType } from '../../../../src/coin/baseCoin';
+import { getBuilder, Eth } from '../../../../src';
 import * as testData from '../../../resources/etc/etc';
-import { TransactionBuilderFactory } from '../../../../src/coin/eth';
 
 describe('Etc Transaction builder', function() {
   const defaultKeyPair = new Eth.KeyPair({
     prv: '3D527F1CB33BB3DECB06F982AABB51B60D8B91209684E1B0938716BAEDC1A2A0',
   });
-  const factory = new TransactionBuilderFactory(coins.get('etc'));
+  const factory = getBuilder('etc') as BaseTransactionBuilderFactory;
 
   describe('should sign', () => {
     it('an init transaction', async () => {

@@ -1,11 +1,11 @@
 import { coins } from '@bitgo/statics';
 import should from 'should';
-import { TransactionType } from '../../../../../src/coin/baseCoin';
+import { BaseTransactionBuilderFactory, TransactionType } from '../../../../../src/coin/baseCoin';
 import * as testData from '../../../../resources/cgld/cgld';
-import { TransactionBuilderFactory } from '../../../../../src/coin/cgld/builder/transactionBuilderFactory';
+import { getBuilder } from '../../../../../src';
 
 describe('An address initialization', () => {
-  const factory = new TransactionBuilderFactory(coins.get('cgld'));
+  const factory = getBuilder('cgld') as BaseTransactionBuilderFactory;
   describe('Should sign and build', () => {
     it('an address initialization transaction', async () => {
       const txBuilder = factory.type(TransactionType.AddressInitialization);

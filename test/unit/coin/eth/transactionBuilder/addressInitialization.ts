@@ -1,12 +1,10 @@
 import should from 'should';
-import { coins } from '@bitgo/statics';
-import { TransactionType } from '../../../../../src/coin/baseCoin';
+import { BaseTransactionBuilderFactory, TransactionType } from '../../../../../src/coin/baseCoin';
 import { getBuilder, Eth } from '../../../../../src';
 import * as testData from '../../../../resources/eth/eth';
-import { TransactionBuilderFactory } from '../../../../../src/coin/cgld/builder/transactionBuilderFactory';
 
 describe('Eth address initialization', () => {
-  const factory = new TransactionBuilderFactory(coins.get('eth'));
+  const factory = getBuilder('eth') as BaseTransactionBuilderFactory;
   it('should fail if there is no contract address', async () => {
     const txBuilder = factory.type(TransactionType.AddressInitialization);
     txBuilder.fee({

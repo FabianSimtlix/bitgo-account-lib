@@ -1,12 +1,12 @@
 import { coins } from '@bitgo/statics';
 import should from 'should';
-import { TransactionType } from '../../../../../src/coin/baseCoin/';
+import { BaseTransactionBuilderFactory, TransactionType } from '../../../../../src/coin/baseCoin/';
 import * as testData from '../../../../resources/cgld/cgld';
-import { TransactionBuilderFactory } from '../../../../../src/coin/cgld/builder/transactionBuilderFactory';
 import { WalletInitializationBuilder } from '../../../../../src/coin/eth';
+import { getBuilder } from '../../../../../src';
 
 describe('Celo Transaction builder for wallet initialization', () => {
-  const factory = new TransactionBuilderFactory(coins.get('cgld'));
+  const factory = getBuilder('cgld') as BaseTransactionBuilderFactory;
   let txBuilder: WalletInitializationBuilder;
   const initTxBuilder = (): void => {
     txBuilder = factory.type(TransactionType.WalletInitialization);

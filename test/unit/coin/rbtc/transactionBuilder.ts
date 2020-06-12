@@ -1,16 +1,14 @@
-import { coins } from '@bitgo/statics';
 import should from 'should';
-import { TransactionType } from '../../../../src/coin/baseCoin/';
+import { BaseTransactionBuilderFactory, TransactionType } from '../../../../src/coin/baseCoin/';
 import * as testData from '../../../resources/rbtc/rbtc';
-import { TransactionBuilderFactory } from '../../../../src/coin/eth';
-import { Eth } from '../../../../src';
+import { Eth, getBuilder } from '../../../../src';
 
 describe('Rbtc Transaction builder', function() {
   const defaultKeyPair = new Eth.KeyPair({
     prv: '63951AF5D5CF06ADE2E8EC0283055548CABCEEB9E9405D00077EC7403BA7A122',
   });
 
-  const factory = new TransactionBuilderFactory(coins.get('rbtc'));
+  const factory = getBuilder('rbtc') as BaseTransactionBuilderFactory;
   describe('should sign', () => {
     it('an init transaction', async () => {
       const txBuilder = factory.type(TransactionType.WalletInitialization);

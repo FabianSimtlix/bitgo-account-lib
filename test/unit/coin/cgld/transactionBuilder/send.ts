@@ -1,12 +1,11 @@
 import should from 'should';
-import { coins } from '@bitgo/statics';
-import { TransactionType } from '../../../../../src/coin/baseCoin';
+import { BaseTransactionBuilderFactory, TransactionType } from '../../../../../src/coin/baseCoin';
 import * as testData from '../../../../resources/cgld/cgld';
-import { TransactionBuilderFactory } from '../../../../../src/coin/cgld/builder/transactionBuilderFactory';
+import { getBuilder } from '../../../../../src';
 
 describe('Send transaction', function() {
   let txBuilder;
-  const factory = new TransactionBuilderFactory(coins.get('cgld'));
+  const factory = getBuilder('cgld') as BaseTransactionBuilderFactory;
   const initTxBuilder = (): void => {
     txBuilder = factory.type(TransactionType.Send);
     txBuilder.fee({

@@ -1,12 +1,11 @@
 import should from 'should';
 import { coins } from '@bitgo/statics';
-import { TransactionType } from '../../../../../src/coin/baseCoin';
-import { Eth } from '../../../../../src';
+import { BaseTransactionBuilderFactory, TransactionType } from '../../../../../src/coin/baseCoin';
+import { Eth, getBuilder } from '../../../../../src';
 import * as testData from '../../../../resources/eth/eth';
-import { TransactionBuilderFactory } from '../../../../../src/coin/eth';
 
 describe('Eth transaction builder send', () => {
-  const factory = new TransactionBuilderFactory(coins.get('eth'));
+  const factory = getBuilder('eth') as BaseTransactionBuilderFactory;
   it('should validate a send type transaction', () => {
     const txBuilder = factory.type(TransactionType.Send);
     const tx = new Eth.Transaction(coins.get('eth'));

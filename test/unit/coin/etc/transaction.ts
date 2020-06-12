@@ -1,6 +1,6 @@
 import should from 'should';
 import { coins } from '@bitgo/statics';
-import { Transaction } from '../../../../src/coin/etc/transaction';
+import { Transaction } from '../../../../src/coin/etc/';
 import * as testData from '../../../resources/etc/etc';
 
 describe('Etc Transaction', () => {

@@ -1,9 +1,8 @@
-import { coins } from '@bitgo/statics';
 import should from 'should';
-import { BaseTransaction, TransactionType } from '../../../../../src/coin/baseCoin';
+import { BaseTransaction, BaseTransactionBuilderFactory, TransactionType } from '../../../../../src/coin/baseCoin';
 import { Eth, getBuilder } from '../../../../../src';
 import * as testData from '../../../../resources/eth/eth';
-import { TransactionBuilderFactory, WalletInitializationBuilder } from '../../../../../src/coin/eth';
+import { WalletInitializationBuilder } from '../../../../../src/coin/eth';
 import { Fee } from '../../../../../src/coin/eth/iface';
 
 describe('Eth Transaction builder wallet initialization', function() {
@@ -25,7 +24,7 @@ describe('Eth Transaction builder wallet initialization', function() {
     owners?: string[];
   }
 
-  const factory = new TransactionBuilderFactory(coins.get('eth'));
+  const factory = getBuilder('eth') as BaseTransactionBuilderFactory;
   const buildTransaction = async function(details: WalletCreationDetails): Promise<BaseTransaction> {
     const txBuilder = factory.type(TransactionType.WalletInitialization);
     if (details.fee !== undefined) {
@@ -298,7 +297,7 @@ describe('Eth Transaction builder wallet initialization', function() {
 
   describe('should validate', () => {
     it('an address', async () => {
-      const txBuilder: any = getBuilder('eth');
+      const txBuilder = factory.type(TransactionType.WalletInitialization);
       txBuilder.validateAddress(testData.VALID_ADDRESS);
       should.throws(
         () => txBuilder.validateAddress(testData.INVALID_ADDRESS),
@@ -307,20 +306,20 @@ describe('Eth Transaction builder wallet initialization', function() {
     });
 
     it('value should be greater than zero', () => {
-      const txBuilder: any = getBuilder('eth');
+      const txBuilder = factory.type(TransactionType.WalletInitialization);
       should.throws(() => txBuilder.fee({ fee: '-10' }));
       should.doesNotThrow(() => txBuilder.fee({ fee: '10' }));
     });
 
     it('a private key', () => {
-      const txBuilder: any = getBuilder('eth');
+      const txBuilder = factory.type(TransactionType.WalletInitialization);
       should.throws(() => txBuilder.validateKey({ key: 'abc' }), 'Invalid key');
       should.throws(() => txBuilder.validateKey({ key: testData.PUBLIC_KEY }), 'Invalid key');
       should.doesNotThrow(() => txBuilder.validateKey({ key: testData.PRIVATE_KEY }));
     });
 
     it('a raw transaction', async () => {
-      const builder: any = factory.type(TransactionType.WalletInitialization);
+      const builder = factory.type(TransactionType.WalletInitialization);
       should.doesNotThrow(() => builder.from(testData.TX_BROADCAST));
       should.doesNotThrow(() => builder.from(testData.TX_JSON));
       should.throws(() => builder.from('0x00001000'), 'There was error in decoding the hex string');

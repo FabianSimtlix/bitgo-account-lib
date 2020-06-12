@@ -1,6 +1,6 @@
 import { coins } from '@bitgo/statics';
 import { BuildTransactionError } from './coin/baseCoin/errors';
-import { BaseTransactionBuilder } from './coin/baseCoin';
+import { BaseTransactionBuilder, BaseTransactionBuilderFactory } from './coin/baseCoin';
 
 import * as crypto from './utils/crypto';
 export { crypto };
@@ -31,14 +31,14 @@ const coinBuilderMap = {
   ttrx: Trx.TransactionBuilder,
   xtz: Xtz.TransactionBuilder,
   txtz: Xtz.TransactionBuilder,
-  etc: Etc.TransactionBuilder,
-  tetc: Etc.TransactionBuilder,
-  eth: Eth.TransactionBuilder,
-  teth: Eth.TransactionBuilder,
-  rbtc: Rbtc.TransactionBuilder,
-  trbtc: Rbtc.TransactionBuilder,
-  cgld: Cgld.TransactionBuilder,
-  tcgld: Cgld.TransactionBuilder,
+  etc: Etc.TransactionBuilderFactory,
+  tetc: Etc.TransactionBuilderFactory,
+  eth: Eth.TransactionBuilderFactory,
+  teth: Eth.TransactionBuilderFactory,
+  rbtc: Rbtc.TransactionBuilderFactory,
+  trbtc: Rbtc.TransactionBuilderFactory,
+  cgld: Cgld.TransactionBuilderFactory,
+  tcgld: Cgld.TransactionBuilderFactory,
 };
 
 /**
@@ -52,7 +52,7 @@ export const supportedCoins = Object.keys(coinBuilderMap);
  * @param coinName One of the {@code supportedCoins}
  * @returns An instance of a {@code TransactionBuilder}
  */
-export function getBuilder(coinName: string): BaseTransactionBuilder {
+export function getBuilder(coinName: string): BaseTransactionBuilder | BaseTransactionBuilderFactory {
   const builderClass = coinBuilderMap[coinName];
   if (!builderClass) {
     throw new BuildTransactionError(`Coin ${coinName} not supported`);

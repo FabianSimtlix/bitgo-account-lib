@@ -1,5 +1,5 @@
 import { BaseCoin as CoinConfig } from '@bitgo/statics/dist/src/base';
-import { TransactionType } from '../../baseCoin';
+import { TransactionType, BaseTransactionBuilderFactory } from '../../baseCoin';
 import { BuildTransactionError } from '../../baseCoin/errors';
 import { Transaction } from '../transaction';
 import { TransactionBuilder } from './transactionBuilder';
@@ -7,9 +7,11 @@ import { WalletInitializationBuilder } from './walletInitializationBuilder';
 import { SendBuilder } from './sendBuilder';
 import { AddressInitializationBuilder } from './addressInitializationBuilder';
 
-export class TransactionBuilderFactory {
+export class TransactionBuilderFactory extends BaseTransactionBuilderFactory {
   protected transactionClass = Transaction;
-  constructor(protected _coinConfig: Readonly<CoinConfig>) {}
+  constructor(_coinConfig: Readonly<CoinConfig>) {
+    super(_coinConfig);
+  }
 
   type(type: TransactionType.WalletInitialization): WalletInitializationBuilder;
   type(type: TransactionType.AddressInitialization): AddressInitializationBuilder;

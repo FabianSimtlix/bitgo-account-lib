@@ -1,13 +1,17 @@
 import should from 'should';
 import { coins } from '@bitgo/statics';
-import { StakingOperationTypes, TransactionType } from '../../../../../src/coin/baseCoin';
+import {
+  BaseTransactionBuilderFactory,
+  StakingOperationTypes,
+  TransactionType,
+} from '../../../../../src/coin/baseCoin';
 import * as testData from '../../../../resources/cgld/cgld';
 import { getOperationConfig } from '../../../../../src/coin/cgld/stakingUtils';
-import { TransactionBuilderFactory } from '../../../../../src/coin/cgld/builder/transactionBuilderFactory';
+import { getBuilder } from '../../../../../src';
 
 describe('Celo staking transaction builder', () => {
   let txBuilder;
-  const factory = new TransactionBuilderFactory(coins.get('tcgld'));
+  const factory = getBuilder('tcgld') as BaseTransactionBuilderFactory;
   /**
    * @param type
    */
